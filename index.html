@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>사경회 관계망 지도</title><link rel="icon" href="data:,">
+<style>
+:root{--bg:#f6f3ec;--fg:#23201b;--mu:#7a7468;--card:#fffdf8;--ln:#d9d2c3;--sea:#e8eef0;--land:#efe6d2;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171613;--fg:#ece6d8;--mu:#a29b8b;--card:#211f1a;--ln:#3a362d;--sea:#1b2224;--land:#2b271e}}
+:root[data-theme="dark"]{--bg:#171613;--fg:#ece6d8;--mu:#a29b8b;--card:#211f1a;--ln:#3a362d;--sea:#1b2224;--land:#2b271e}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 "Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif}
+.w{max-width:760px;margin:0 auto;padding:14px}
+h1{font-size:19px;margin:0 0 2px}.s{color:var(--mu);font-size:12.5px;margin:0 0 10px}
+.bar{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+button{font:inherit;font-size:13px;border:1px solid var(--ln);background:var(--card);color:var(--fg);border-radius:999px;padding:5px 12px;cursor:pointer}
+button.on{background:var(--fg);color:var(--bg)}
+#map{background:var(--sea);border:1px solid var(--ln);border-radius:14px;overflow:hidden}
+svg{display:block;width:100%;height:auto;touch-action:manipulation}
+.n{cursor:pointer}.n text{font-size:11.5px;font-weight:700}
+#p{margin-top:12px;background:var(--card);border:1px solid var(--ln);border-radius:14px;overflow:hidden}
+.hd{padding:14px 16px;color:#fff}.hd b{font-size:20px}.hd div{font-size:13px;opacity:.92}
+.bd{padding:6px 16px 16px}.bd h3{font-size:13px;color:var(--mu);margin:14px 0 6px;letter-spacing:.04em}
+.st{display:grid;grid-template-columns:124px 1fr auto;gap:8px;align-items:center;font-size:13px;margin:4px 0}
+.tr{height:12px;background:var(--ln);border-radius:6px;overflow:hidden}.tr i{display:block;height:100%;border-radius:6px}
+.tl{border-left:2px solid var(--ln);margin-left:6px;padding-left:12px}
+.ev{margin:0 0 10px;position:relative}.ev:before{content:"";position:absolute;left:-18px;top:6px;width:10px;height:10px;border-radius:50%;background:var(--c)}
+.ev b{font-size:14px}.ev em{font-style:normal;font-size:11.5px;color:var(--mu);margin-left:6px}.ev p{margin:2px 0 0;font-size:13.5px}
+.pp{display:flex;flex-wrap:wrap;gap:6px}.pp span{border:1px solid var(--ln);border-radius:999px;padding:2px 10px;font-size:13px}
+.c{cursor:pointer}.ch{margin:0 0 10px;padding:12px 14px;background:var(--card);border:1px solid var(--ln);border-radius:12px}.ch b{font-size:14.5px}.ch p{margin:4px 0 8px;font-size:13.5px}#net{overflow-x:auto;background:#fffdf8;border:1px solid var(--ln);border-radius:14px}#net svg{min-width:640px}.ft{font-size:11.5px;color:var(--mu);margin-top:12px}
+</style></head><body><div class="w">
+<h1>한국 감리교 사경회 관계망 지도</h1>
+<p class="s">박영철, 「한국 감리교 평신도 운동의 역사적 고찰」 Ⅳ-3 지역별 사경회 · 세 가지 보기: 지역 지도 · 연도·인물 네트워크 · 논문 장별 흐름 (개략도, 축척 없음)</p>
+<div class="bar" id="tabs"></div><div class="bar" id="dec"></div>
+<div id="map"><svg id="sv" viewBox="0 0 380 440" xmlns="http://www.w3.org/2000/svg"></svg></div>
+<div class="bar"><button id="home">전체 보기</button><button id="dm">지도 PNG 저장</button><button id="dc">지역 카드 PNG 저장</button></div>
+<div id="vn" hidden><p class="s">연도별 인물 네트워크 — 점은 활동 시점, 곡선은 인물 간 연결. 이름이나 점을 누르세요. (붉은 점선 = 1907 평양 대부흥)</p><div id="net"></div></div><div id="vc" hidden></div><div id="p"><div class="bd" style="color:var(--mu)">지도의 지명(서울, 강화, 평양 …)을 눌러 보세요.</div></div>
+</div>
+<script>
+const R={
+seoul:{n:'서울(경성)',x:183,y:212,c:'#c8741f',pg:'pp.56–62',sub:'사경회의 태동과 신학 훈련 — 전국 평신도 지도자 훈련의 허브',lx:11,ly:-3,
+st:[['1899 사역자',21,'21명'],['1924 종교교회',300,'300여 명'],['1924 승동(일일)',700,'600~700명']],
+ppl:['최병헌','아펜젤러','스크랜턴','헤론 부인','정인과','오긍선'],
+tl:[[1893,'리포지터리','최병헌, 1888 정동에서 아펜젤러를 찾아 성경을 읽기 시작해 1893 세례. 헤론 부인의 토요일 바느질·성경 읽기 모임'],[1899,'리포지터리','전국 조사·권서인 21명이 서울에 합숙하며 강해를 받고 인근 전도 병행'],[1910,'미션필드','강화·강원·평북 평신도가 집결. 오전 교리, 오후 전도대(4–5시), 밤 철야기도의 순환 구조'],[1924,'기독신보','승동예배당 장감 연합 부인 대사경회 매일 600~700명, 종교교회 300여 명']]},
+gh:{n:'강화·인천',x:148,y:203,c:'#2a8a8a',pg:'pp.63–67',sub:'개항장과 섬에서 뿌리내린 순회·여성 사역',lx:-11,ly:4,a:'end',
+st:[['교인 수(1909–10)',130,'40→130명'],['문서전도 결신',130,'130명'],['1925 인천 사경회',200,'200명 / 결신 77']],
+ppl:['존스(조원보) 부부','코프 주교(성공회)','이름 없는 제물포 권서인','강화 구역 지도자'],
+tl:[[1895,'리포지터리','제물포 토착 신자가 60달러를 모금. 존스 목사가 제물포·강화 순회구역, 부인은 여성사역 전담 (1896–97)'],[1909,'미션필드','강화에 자생 교회 30여 개. 서울 사경회 귀환 후 2~3주 겨울 부흥으로 40→130명. 마가복음 60권 배포로 결신 130명'],[1925,'기독신보','인천지방 대사경 7일, 새신자 77명. 강화읍내교회는 14일 장기 합숙 사경회']]},
+py:{n:'평양',x:107,y:112,c:'#b8325a',pg:'pp.68–73',sub:'영적 각성과 근대 교육이 만난 자리 — 1907 대부흥의 현장',lx:11,ly:4,
+st:[['1897 의주 등',50,'50여 명'],['1921 남산현',500,'500여 명'],['1907 겨울',1750,'1,500~2,000명']],
+ppl:['마펫','스왈런','무어','맥큔','마가렛 베스트','김선두','한례전·양씨'],
+tl:[[1897,'리포지터리','의주 등 먼 곳에서 50여 명, 부인 사경회 47명이 도보 참석'],[1901,'미션필드','남산현·장대현교회에서 도(都)·시골 사경회 병행 (농한기 1~3월)'],[1907,'미션필드','1.2–15 장대현교회 남성 사경회에서 공개 통회. 1,500~2,000명이 70~90마일을 걸어 참석'],[1921,'기독신보','12.15 남산현교회 7일, 500여 명 1~4학년 분반'],[1925,'기독신보','강서 학동교회 부인 사경회를 평신도 여성 한례전·양씨가 인도']]},
+sc:{n:'선천',x:55,y:58,c:'#6a4fb3',pg:'pp.74–78',sub:'날 연보(日捐補)와 여성 교육의 확산',lx:11,ly:4,
+st:[['1906 여성 등록',2602,'2,602명'],['동시 운영 클래스',16,'16개']],
+ppl:['체이스(Chase)','제인 사무엘','김선두 목사(주강사)'],
+tl:[[1901,'미션필드','선교지부 설치. 체이스 선교사가 여성 사경회 시작'],[1904,'미션필드','빈곤한 평신도가 농번기 날수를 바치는 “날 연보” 등장 (11월)'],[1906,'미션필드','제인 사무엘 한 사람의 주도로 16개 클래스, 2,602명 등록'],[1925,'기독신보','9.28부터 10일간 남북 두 교회 연합 사경회']]},
+hj:{n:'해주·황해',x:104,y:180,c:'#3f8f4e',pg:'pp.79–84',sub:'선교사 없이도 모인 자생적 신앙 공동체',lx:-11,ly:4,a:'end',
+st:[['1925 해주 대사경회',750,'700~800명']],
+ppl:['샤프(Sharp)','스네블리','김선두 목사(평양)','조사·영수·속장'],
+tl:[[1896,'리포지터리','해주 장터에서 복음서를 산 농부들과 접촉'],[1907,'미션필드','12.10 재령 사경회 개시. “매년 겨울 부흥을 가져다 준다”'],[1912,'미션필드','스네블리 등이 여성 사경회 주도, 조사·영수·속장이 함께 참석'],[1925,'기독신보','1.6부터 1주일 해주읍교회, 700~800명, 평양 김선두 목사 주강사']]},
+sw:{n:'수원·경기',x:184,y:236,c:'#9a7b1d',pg:'pp.85–88',sub:'거점 없이 길 위에서 열린 순회 사경회',lx:11,ly:12,
+st:[['1928 수원읍(일수)',8,'8일']],
+ppl:['스크랜턴','버딕','전도부인·조력자'],
+tl:[[1895,'리포지터리','스크랜턴이 수원·공주 책임자로 지명. 산발적 순회 사역'],[1907,'미션필드','8월 버딕 보고 — 평양 대부흥의 불길이 전국으로 번지던 해'],[1928,'기독신보','4월 수원읍예배당에서 8일간 합숙 사경회']]},
+cj:{n:'청주',x:214,y:277,c:'#2f6fb0',pg:'pp.89–91',sub:'단계별 제도와 심화 학습',lx:11,ly:4,
+st:[['1910 여성 겨울반',130,'130여 명']],
+ppl:['곽안련','민노아','로해리(장립)'],
+tl:[[1910,'미션필드','10일 사경회에 입학시험(Entrance Exam) 도입, 초급~고급 등급제. 하계 사경회'],[1920,'기독신보','7월 사경회 중 로해리 목사 장립식 — 교육과 치리가 결합']]},
+dg:{n:'대구·부산',x:282,y:330,c:'#777',pg:'pp.133–136',sub:'장로교 비교 사례 (영남)',lx:11,ly:4,
+st:[['1924 여성 사경회',600,'600여 명']],ppl:['배위량(Baird)','토착 전도부인'],
+tl:[[1891,'리포지터리','북장로교 부산 기지(1891), 호주 장로교 여성 선교사 진입(1889)'],[1924,'기독신보','대구·부산 최소 7일 이상, 날 연보와 마가복음 보급']]},
+jj:{n:'전주',x:193,y:334,c:'#777',pg:'p.137',sub:'장로교 비교 사례 (호남)',lx:-11,ly:4,a:'end',
+st:[['1910 남성 사경회',600,'600명 이상']],ppl:['맥커친(McCutchen)'],
+tl:[[1910,'미션필드','2월 전주 남성 사경회, 5개 등급 분반 10일, 10년 커리큘럼']]}};
+const E=[['seoul','gh','1909 중앙 사경회 참석'],['seoul','py','평신도 지도자 네트워크'],['seoul','hj','서울 사경회 합류'],['seoul','sw','순회 전도'],['seoul','cj','단계별 제도'],['py','sc','김선두 초빙(1925)'],['py','hj','김선두 초빙(1925)'],['py','dg','장로교 비교'],['py','jj','장로교 비교']];
+
+Object.assign(R,{
+wn:{n:'원산',x:212,y:103,c:'#c0562e',pg:'pp.35–36, 110–111',sub:'1903 하디의 회개 — 대부흥의 불씨',lx:11,ly:4,st:[['안변 세례교인',152,'152명'],['학습 교인',120,'120명']],ppl:['하디(R. A. Hardie)','안변 매서인들'],
+tl:[[1903,'미션필드','원산 사경회에서 기도 강연을 준비하던 하디가 자신의 교만과 완악함을 공개 고백 — 부흥 운동의 불씨'],[1908,'미션필드','하디의 원산 순회구역 보고: 안변에서 15년 매서인 사역 끝에 조직 교회 15개, 세례교인 152명·학습교인 120명']]},
+kj:{n:'개성(송도)',x:155,y:185,c:'#8a5a9e',pg:'pp.33, 114',sub:'평신도 헌신의 사례 — 맹인 전도인과 병원 개종자',lx:11,ly:4,st:[],ppl:['백사겸(南감리교 전도인)','송도 병원 환자'],
+tl:[['미상','미션필드','시각장애 신도 백사겸(1860–1940)이 사복음서를 암송하며 장별 강해'],[1916,'미션필드','송도에서 회심한 환자가 퇴원 후 고향 마을 이웃 15명을 직접 전도']]},
+sy:{n:'심양(만주)',x:150,y:14,c:'#777',pg:'pp.35, 38',sub:'성경이 선교사보다 먼저 들어온 길',lx:11,ly:4,st:[],ppl:['로스(John Ross)','서상륜 등 매서인','이응찬·백홍준·최성균'],
+tl:[[1887,'한국기독교사','로스가 『예수셩교전서』(신약) 간행. 이응찬·백홍준·서상륜·최성균이 세례 받고 매서인으로 성경을 조선에 운반']]},
+dk:{n:'도쿄',x:338,y:424,c:'#777',pg:'pp.35–36',sub:'해외에서 시작된 성경 번역',lx:-11,ly:4,a:'end',st:[],ppl:['이수정'],
+tl:[['미상','한국기독교사','이수정이 도쿄에서 성경 번역과 전도에 매진']]}});
+Object.assign(R,{
+gj:{n:'공주',x:192,y:290,c:'#a0522d',pg:'pp.85, 141–142',sub:'스크랜턴의 수원·공주 사역과 충청 거점',lx:-11,ly:4,a:'end',st:[],ppl:['스크랜턴'],
+tl:[[1895,'리포지터리','감리교 선교부 연례회의가 스크랜턴을 수원·공주 사역 책임자로 지명'],['요약','표 5·결론','감리교 거점 지역 사례(경기·충정 중심): 서울·개성·수원·공주·인천']]},
+mp:{n:'목포(광주)',x:147,y:404,c:'#777',pg:'pp.137–138',sub:'장로교 비교 사례 (호남) — 해안 도시의 시각 교육과 날 연보',lx:11,ly:4,st:[],ppl:['남장로교 선교부','사경회 수강생(자발적 전도자)'],
+tl:[[1910,'미션필드','목포·인근 도서 지역 사경회 — 수강생이 자발적 전도와 날 연보를 작정, 남부의 자생적 복음화를 견인'],[1919,'기독신보','11.20 목포 사경회가 바울의 선교 여정을 지도와 함께 강의하는 시각 교육 도입(사도행전 13~28장 강조)']]}});
+R.gh.tl.splice(1,0,[1906,'미션필드','케이블이 제물포에서 6일간 연합 구역회 — 오전 구두시험, 저녁 부흥회. 하와이 귀국 평신도가 강화 일대 8개 교회·500여 명 목양']);R.gh.ppl.push('케이블');
+R.dg.tl.splice(1,0,[1905,'미션필드','대구 인근 사돌 시골 여성 사경회 — 아기를 업고 쌀·반찬을 이고 모여듦(애덤스 부인 증언)']);R.dg.ppl.push('애덤스 부인');R.dg.tl.push([1910,'표 5','부산 날 연보 3,501일·마가복음 9,334권']);
+R.py.tl.splice(4,0,[1909,'미션필드','날 연보 확산 → 1909–10 ‘백만 명 구령 운동’에서 3,000일 이상 자원 전도. 1907 독노회 창립']);
+E.push(['seoul','gj','1895 수원·공주 책임'],['py','mp','장로교 비교'],['py','sy','성경·매서인 유입'],['seoul','dk','이수정 성경 번역'],['seoul','wn','원산 부흥의 영향'],['wn','py','1903→1907'],['seoul','kj','1916 송도']);
+const P=[
+['로스(J. Ross)','sy',[[1887,'심양에서 『예수셩교전서』 간행, 조선 청년 4인에게 세례']]],
+['서상륜 등 매서인','sy',[[1887,'성경을 조선 내부로 운반·배포한 초기 매서인']]],
+['이수정','dk',[['미상','도쿄에서 성경 번역과 전도']]],
+['최병헌','seoul',[[1888,'정동으로 아펜젤러를 찾아 한문 성경을 읽기 시작'],[1893,'세례. 배재학당 한문 교사, 한글 성서 번역 착수']]],
+['아펜젤러','seoul',[[1888,'정동 양관에서 최병헌을 맞이']]],
+['스크랜턴','seoul',[[1892,'상동 의료 사역으로 극빈자·병자를 품음 (1890년대 초)'],[1895,'수원·공주 사역 책임자로 지명','sw']]],
+['헤론 부인','seoul',[[1892,'토요일 바느질·성경 읽기 모임 (1890년대 초)']]],
+['정인과·오긍선','seoul',[[1924,'승동 장감 연합 부인 대사경회 강사']]],
+['하디','wn',[[1903,'원산 사경회에서 자신의 교만을 공개 고백'],[1908,'원산 순회구역(안변) 보고']]],
+['존스(조원보)','gh',[[1895,'제물포 신자들과 60달러 모금·순회 지도'],[1896,'제물포·강화 순회구역 담임']]],
+['존스 부인','gh',[[1896,'제물포 부녀자 대상 독립적 여성 사역']]],
+['코프 주교','gh',[[1897,'성공회, 제물포·강화를 거점으로 서울 본부와 연계']]],
+['케이블','gh',[[1906,'제물포 6일 연합 구역회 — 구두시험과 부흥회']]],
+['마펫','py',[[1896,'평양 파송, 사경회 현장 기록'],[1897,'4~10일 평일반 형태의 사경회 기록'],[1905,'평양 사경회 보고']]],
+['스왈런','py',[[1897,'평양 사경회 논고 「토착 목회자 훈련」'],[1907,'사경회 등록 담당 — 1,000명 이상 집결']]],
+['무어','py',[[1907,'두 달 사경회 일정 기록 “성경을 먹고 살았다”'],[1908,'날 연보 운동 성장 보고']]],
+['맥큔','py',[[1907,'스왈런의 증언을 담은 평양 사경회 보고']]],
+['한례전','py',[[1925,'강서 학동교회 부인 사경회·전도회 인도']]],
+['체이스','sc',[[1901,'선천 여성 사경회 시작']]],
+['제인 사무엘','sc',[[1906,'16개 클래스, 2,602명 등록']]],
+['김선두','sc',[[1925,'선천 사경회 주강사 (평양에서 초빙)'],[1925,'해주 대사경회 주강사','hj']]],
+['샤프','hj',[[1907,'12.10 재령 사경회 — “매년 겨울 부흥”']]],
+['스네블리','hj',[[1912,'해주 구역 여성 사경회 주도']]],
+['버딕','sw',[[1907,'8월 수원 지역 사경회 보고']]],
+['곽안련·민노아','cj',[[1920,'청주 하계 사경회 강단']]],
+['로해리','cj',[[1920,'사경회 중 목사 장립례']]],
+['배위량','dg',[[1891,'부산·대구를 오가며 사경회 거점 탐색 (1891~96경)']]],
+['애덤스 부인','dg',[[1905,'대구 사돌 여성 사경회 증언']]],
+['맥커친','jj',[[1910,'전주 남성 사경회 — 600명 이상, 5등급 10일']]],
+['백사겸','kj',[['미상','송도 맹인 신도, 사복음서 암송·강해']]]];
+const L=[['로스(J. Ross)','서상륜 등 매서인','1887 세례·성경 운반'],['아펜젤러','최병헌','1888 정동 방문'],['존스(조원보)','존스 부인','부부 사역'],['존스(조원보)','코프 주교','제물포·강화 병존'],['하디','스왈런','원산→평양 영향'],['마펫','스왈런','평양 사경회'],['스왈런','무어','1907 대부흥'],['체이스','제인 사무엘','선천 여성 사경회'],['스크랜턴','버딕','수원 지역'],['곽안련·민노아','로해리','1920 청주'],['배위량','애덤스 부인','대구 지역']];
+const NS='http://www.w3.org/2000/svg',sv=document.getElementById('sv');let cur=null,dec=0,vb=[0,0,380,440];
+const mk=(t,a,p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);(p||sv).appendChild(e);return e};
+const css=getComputedStyle(document.documentElement);
+mk('path',{d:'M30,45 L110,34 L150,62 L128,95 L150,125 L128,155 L122,185 L132,205 L150,225 L158,265 L165,305 L150,340 L135,385 L150,422 L210,432 L270,422 L300,405 L335,385 L352,345 L335,295 L340,245 L324,195 L300,145 L262,95 L215,62 L165,38 L100,24 Z',fill:'#e6dcc4',stroke:'#b9ac8c','stroke-width':1.2});
+E.forEach(([a,b,l])=>{const A=R[a],B=R[b],g=B.c==='#777';const e=mk('line',{x1:A.x,y1:A.y,x2:B.x,y2:B.y,stroke:g?'#8a8577':'#a7683a','stroke-width':g?1.2:1.8,'stroke-dasharray':g?'4 3':'0',opacity:.7});mk('title',{},e).textContent=l});
+Object.entries({seoul:'D-1',gh:'D-2',py:'D-3',sc:'D-4',hj:'D-5',sw:'D-6',cj:'D-7'}).forEach(([k,v])=>R[k].d=v);
+const T={wn:'b',kj:'b',gj:'b',dg:'c',jj:'c',mp:'c',sy:'f',dk:'f'};
+function shp(g,r,k,s){const t=T[k]||'a',x=r.x,y=r.y,q=s||1;
+ if(t==='b')mk('rect',{x:x-5.5*q,y:y-5.5*q,width:11*q,height:11*q,transform:`rotate(45 ${x} ${y})`,fill:r.c,stroke:'#fff','stroke-width':2*q},g);
+ else if(t==='c')mk('circle',{cx:x,cy:y,r:7*q,fill:'#fffdf8',stroke:'#777','stroke-width':2.2*q},g);
+ else if(t==='f')mk('rect',{x:x-6*q,y:y-6*q,width:12*q,height:12*q,fill:'#5a6b8c',stroke:'#fff','stroke-width':2*q},g);
+ else mk('circle',{cx:x,cy:y,r:7*q,fill:r.c,stroke:'#fff','stroke-width':2*q},g)}
+(()=>{const x=266,y=6;mk('rect',{x,y,width:112,height:108,rx:6,fill:'#fffdf8',stroke:'#cfc6b2'});
+[['a','지역별 분석(Ⅳ-3)','#c8741f'],['b','기타 장 사례','#8a5a9e'],['c','장로교 비교(Ⅵ)','#777'],['f','해외 기원(Ⅲ)','#5a6b8c']].forEach(([t,l,c],i)=>{const cy=y+12+i*14;T['_'+t]=t;shp(null,{x:x+11,y:cy,c},'_'+t,.6);mk('text',{x:x+24,y:cy+3.5,'font-size':8.5,fill:'#23201b'}).textContent=l});
+mk('line',{x1:x+4,y1:y+68,x2:x+18,y2:y+68,stroke:'#a7683a','stroke-width':1.8});mk('text',{x:x+24,y:y+71.5,'font-size':8.5,fill:'#23201b'}).textContent='인물·사경회 연결';
+mk('line',{x1:x+4,y1:y+82,x2:x+18,y2:y+82,stroke:'#8a8577','stroke-width':1.2,'stroke-dasharray':'4 3'});mk('text',{x:x+24,y:y+85.5,'font-size':8.5,fill:'#23201b'}).textContent='비교·유입';mk('text',{x:x+6,y:y+99,'font-size':8.5,fill:'#a7683a'}).textContent='→D-n : 부록 D 카드 번호'})();
+const ns={};
+for(const k in R){const r=R[k],g=mk('g',{class:'n'});ns[k]=g;
+shp(g,r,k);
+const t=mk('text',{x:r.x+r.lx,y:r.y+r.ly,'text-anchor':r.a||'start',fill:'#23201b',stroke:'#f6f3ec','stroke-width':3,'paint-order':'stroke','font-size':11.5,'font-weight':700},g);t.textContent=r.n;if(r.d){const e=r.a==='end',q=mk('tspan',e?{x:r.x+r.lx,dy:10,'font-size':8.5,'font-weight':400,fill:'#a7683a'}:{'font-size':8.5,'font-weight':400,fill:'#a7683a'},t);q.textContent=(e?'':' ')+'→'+r.d}
+g.onclick=()=>open(k)}
+const decs=[[0,'전체'],[1890,'1890s'],[1900,'1900s'],[1910,'1910s'],[1920,'1920s']];
+const db=document.getElementById('dec');
+decs.forEach(([d,l])=>{const b=document.createElement('button');b.textContent=l;if(!d)b.className='on';b.onclick=()=>{dec=d;[...db.children].forEach(x=>x.className='');b.className='on';filt()};db.appendChild(b)});
+function filt(){for(const k in R){const has=!dec||R[k].tl.some(e=>e[0]>=dec&&e[0]<dec+10);ns[k].style.opacity=has?1:.18}}
+function zoom(t){const s=vb.slice(),st=performance.now();(function f(n){const u=Math.min(1,(n-st)/450),e=1-Math.pow(1-u,3);vb=s.map((v,i)=>v+(t[i]-v)*e);sv.setAttribute('viewBox',vb.join(' '));if(u<1)requestAnimationFrame(f)})(st)}
+function open(k){cur=k;const r=R[k],w=140,h=w*440/380;zoom([Math.max(0,Math.min(380-w,r.x-w/2)),Math.max(0,Math.min(440-h,r.y-h/2)),w,h]);
+const mx=Math.max(...r.st.map(s=>s[1]));
+document.getElementById('p').innerHTML=`<div class="hd" style="background:${r.c}"><b>${r.n}</b><div>${r.sub}</div></div><div class="bd" style="--c:${r.c}">${r.st.length?'<h3>참석 규모</h3>':''}${r.st.map(s=>`<div class="st"><span>${s[0]}</span><div class="tr"><i style="width:${Math.max(4,s[1]/mx*100)}%;background:${r.c}"></i></div><b>${s[2]}</b></div>`).join('')}<h3>연도별 전개</h3><div class="tl">${r.tl.map(e=>`<div class="ev"><b>${e[0]}</b><em>${e[1]}</em><p>${e[2]}</p></div>`).join('')}</div><h3>관련 인물</h3><div class="pp">${r.ppl.map(p=>`<span class="c" title="네트워크에서 보기" onclick="goP(this.textContent)">${p}</span>`).join('')}</div><div class="ft">출처: 박영철 석사학위논문 ${r.pg} (『코리아 리포지터리』·『코리아 미션 필드』·『기독신보』)</div></div>`;
+document.getElementById('p').scrollIntoView({behavior:'smooth',block:'nearest'})}
+home.onclick=()=>zoom([0,0,380,440]);
+function dl(c,n){const a=document.createElement('a');a.download=n;a.href=c.toDataURL('image/png');a.click()}
+dm.onclick=()=>{const c=sv.cloneNode(true);c.setAttribute('viewBox','0 0 380 440');c.setAttribute('width',1140);c.setAttribute('height',1320);
+const bg=document.createElementNS(NS,'rect');[['x',0],['y',0],['width',380],['height',440],['fill','#e8eef0']].forEach(([a,v])=>bg.setAttribute(a,v));c.insertBefore(bg,c.firstChild);
+c.querySelectorAll('g').forEach(g=>g.style.opacity=1);
+const im=new Image();im.onload=()=>{const cv=document.createElement('canvas');cv.width=1140;cv.height=1320;cv.getContext('2d').drawImage(im,0,0);dl(cv,'사경회_관계망_지도.png')};
+im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(c))};
+dc.onclick=()=>{if(!cur){alert('먼저 지역을 선택하세요.');return}
+const r=R[cur],F='"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif',W=1000,P=44;
+function d(x,dry){let y=0;const wr=(t,w)=>{const o=[];let l='';for(const ch of t){if(x.measureText(l+ch).width>w){o.push(l);l=ch}else l+=ch}o.push(l);return o};
+if(!dry){x.fillStyle='#fffdf8';x.fillRect(0,0,W,1e4)}
+if(!dry){x.fillStyle=r.c;x.fillRect(0,0,W,150);x.fillStyle='#fff';x.font='bold 52px '+F;x.fillText(r.n,P,76);x.font='24px '+F;x.fillText(r.sub,P,118)}
+y=150+50;const H=t=>{if(!dry){x.fillStyle='#7a7468';x.font='bold 22px '+F;x.fillText(t,P,y)}y+=14};
+if(r.st.length){H('참석 규모');y+=18}const mx=Math.max(...r.st.map(s=>s[1]));
+r.st.forEach(s=>{if(!dry){x.fillStyle='#23201b';x.font='24px '+F;x.fillText(s[0],P,y+8);x.fillStyle='#e6dfcf';x.fillRect(330,y-14,430,26);x.fillStyle=r.c;x.fillRect(330,y-14,Math.max(14,s[1]/mx*430),26);x.fillStyle='#23201b';x.font='bold 24px '+F;x.fillText(s[2],775,y+8)}y+=46});
+y+=20;H('연도별 전개');y+=24;
+r.tl.forEach(e=>{if(!dry){x.fillStyle=r.c;x.beginPath();x.arc(P+8,y-8,8,0,7);x.fill();x.fillStyle='#23201b';x.font='bold 28px '+F;x.fillText(e[0],P+34,y);x.fillStyle='#7a7468';x.font='20px '+F;x.fillText(e[1],P+110,y)}
+x.font='23px '+F;y+=34;wr(e[2],W-2*P-34).forEach(l=>{if(!dry){x.fillStyle='#23201b';x.font='23px '+F;x.fillText(l,P+34,y)}y+=33});y+=14});
+y+=10;H('관련 인물');y+=26;let px=P;x.font='22px '+F;
+r.ppl.forEach(p=>{const w=x.measureText(p).width+28;if(px+w>W-P){px=P;y+=48}if(!dry){x.strokeStyle='#cfc6b2';x.lineWidth=2;x.beginPath();x.roundRect(px,y-26,w,38,19);x.stroke();x.fillStyle='#23201b';x.font='22px '+F;x.fillText(p,px+14,y)}px+=w+10});
+y+=60;if(!dry){x.fillStyle='#7a7468';x.font='19px '+F;x.fillText('출처: 박영철 석사학위논문 '+r.pg+' (코리아 리포지터리·코리아 미션 필드·기독신보)',P,y)}return y+36}
+const t=document.createElement('canvas').getContext('2d');t.font='23px '+F;const h=d(t,true);
+const cv=document.createElement('canvas');cv.width=W;cv.height=h;const x=cv.getContext('2d');d(x,false);dl(cv,'사경회_'+r.n+'_카드.png')};
+
+let view='m',links=[];const PN=document.getElementById('p'),vn=document.getElementById('vn'),vc=document.getElementById('vc'),goR=k=>open(k);
+const CH=[['Ⅱ 웨슬리에서 미국 감리교로','1742 웨슬리가 브리스틀에서 속회(10~12명) 고안 · 1779 버지니아 플루바나 논쟁 · 1801 케인 리지 천막 집회 — 평신도 소그룹과 부흥 집회의 구조가 조선 선교로 이식됨',[]],
+['Ⅲ 한국 감리교 평신도 운동의 형성','선교사 절대 부족 속에 평신도 중심 전략 채택. 1887 로스의 성경과 매서인, 전도부인, 속회가 선교사보다 앞서 길을 닦음. 안변은 15년 매서인 사역 끝에 교회 15개·세례교인 152명(1908)',['sy','dk','wn','kj']],
+['Ⅳ-1·2 사경회의 기원과 선교사의 평신도 사역','1936년 한 해 2,344개의 일주일 전일제 사경회, 누적 참석자 교인의 절반 초과. 1905 대구 사돌 여성 사경회, 1906.10 케이블의 제물포 연합 구역회',['dg','gh']],
+['Ⅳ-3 지역별 사경회 (세 사료 비교)','리포지터리(1890s)–미션필드(1900~10s)–기독신보(1920s)로 서울·강화·평양·선천·해주·수원·청주를 추적',['seoul','gh','py','sc','hj','sw','cj']],
+['Ⅳ-4 신학적 함의','참회와 학습의 상호 책임, 전통적 학습 방식의 전개, 여성 사경회의 교과 체계와 지도자 양성의 훈련',[]],
+['Ⅳ-5 부흥과 헌신의 동력','1903 원산 하디의 고백 → 1906 평양 선교사 8일 기도 → 1907.1 장대현교회 대부흥 → 날 연보(1909–10 백만 명 구령 운동, 3,000일 이상) · 1907 독노회 창립',['wn','py','sc']],
+['Ⅳ-6 성경공부반으로의 이행','리포지터리: 원초적 학습 공동체 → 미션필드: 제도적 정착과 지역 확산 → 기독신보: 학제화와 권력 구조 재편 (성경학원 체제)',['seoul','cj']],
+['Ⅴ·Ⅶ 독자성과 결론','집중성·자발적 헌신·민족적 신앙 정체성이라는 세 특성. 지식→실천→성찰의 순환은 웨슬리 속회·반회의 원리와 구조적으로 일치',['seoul']],
+['Ⅵ 감리교·장로교 비교','네비어스 정책(1890: 자립·성경 중심, 칼뱅주의 정통성) 대 웨슬리안(말씀+사회적 실천, 체험주의). 영남 1924 대구·부산, 호남 1910 전주. 장로교 1936 전일제 사경회는 교인의 50% 상회',['dg','jj']]];
+const tb=document.getElementById('tabs');
+[['m','지역 지도'],['n','연도·인물 네트워크'],['c','논문 장별 흐름']].forEach(([v,l])=>{const b=document.createElement('button');b.textContent=l;b.id='tab'+v;b.onclick=()=>showV(v);tb.appendChild(b)});
+function showV(v){view=v;[document.getElementById('dec'),document.getElementById('map'),home].forEach(e=>e.style.display=v==='m'?'':'none');vn.hidden=v!=='n';vc.hidden=v!=='c';
+[...tb.children].forEach(b=>b.className=b.id==='tab'+v?'on':'');
+if(v==='n'&&!window.nb){window.nb=1;buildNet()}
+if(v==='c'&&!vc.innerHTML)vc.innerHTML=CH.map(c=>`<div class="ch"><b>${c[0]}</b><p>${c[1]}</p><div class="pp">${c[2].map(k=>`<span class="c" onclick="showV('m');goR('${k}')">${R[k].n}</span>`).join('')}</div></div>`).join('')}
+showV('m');
+function buildNet(){const W=760,x0=150,x1=740,y0=58,lh=21,H=y0+P.length*lh+24,X=y=>typeof y==='number'?x0+(y-1880)*(x1-x0)/50:126;
+const s=mk('svg',{id:'nsv',viewBox:`0 0 ${W} ${H}`,xmlns:NS},document.getElementById('net'));
+mk('rect',{x:0,y:0,width:W,height:H,fill:'#fffdf8'},s);
+P.forEach((p,i)=>mk('rect',{x:0,y:y0+i*lh-lh/2,width:W,height:lh,fill:R[p[1]].c,opacity:.09},s));
+for(let y=1880;y<=1930;y+=10){mk('line',{x1:X(y),y1:34,x2:X(y),y2:H-10,stroke:'#d9d2c3'},s);if(y>1880)mk('text',{x:X(y),y:28,'text-anchor':'middle','font-size':12,fill:'#7a7468'},s).textContent=y}
+mk('text',{x:126,y:28,'text-anchor':'middle','font-size':11,fill:'#7a7468'},s).textContent='미상';
+mk('line',{x1:X(1907),y1:34,x2:X(1907),y2:H-10,stroke:'#b8325a','stroke-dasharray':'4 3','stroke-width':1.5},s);mk('text',{x:X(1907),y:46,'text-anchor':'middle','font-size':10.5,fill:'#b8325a'},s).textContent='1907 대부흥';
+const pos=P.map((p,i)=>[X(p[2][0][0]),y0+i*lh]);
+L.forEach(l=>{const a=P.findIndex(p=>p[0]===l[0]),b=P.findIndex(p=>p[0]===l[1]);if(a<0||b<0)return;const[xa,ya]=pos[a],[xb,yb]=pos[b];
+const e=mk('path',{d:`M${xa},${ya} Q${Math.min(xa,xb)-26},${(ya+yb)/2} ${xb},${yb}`,fill:'none',stroke:'#a7683a','stroke-width':1.5,opacity:.55},s);mk('title',{},e).textContent=l[2];links.push({el:e,a,b})});
+P.forEach((p,i)=>{const y=y0+i*lh,t=mk('text',{x:8,y:y+4,'font-size':11.5,'font-weight':700,fill:'#23201b',style:'cursor:pointer'},s);t.textContent=p[0];t.onclick=()=>sel(i);
+p[2].forEach(e=>{const c=mk('circle',{cx:X(e[0]),cy:y,r:5,fill:R[e[2]||p[1]].c,stroke:'#fff','stroke-width':1.5,style:'cursor:pointer'},s);c.onclick=()=>sel(i);mk('title',{},c).textContent=e[0]+' '+e[1]})})}
+function sel(i){const p=P[i],r=R[p[1]];links.forEach(l=>{const on=l.a===i||l.b===i;l.el.setAttribute('stroke-width',on?3:1.5);l.el.setAttribute('opacity',on?1:.2)});
+const rel=L.filter(l=>l[0]===p[0]||l[1]===p[0]);
+PN.innerHTML=`<div class="hd" style="background:${r.c}"><b>${p[0]}</b><div>${r.n} · 연도별 활동</div></div><div class="bd" style="--c:${r.c}"><h3>활동</h3><div class="tl">${p[2].map(e=>`<div class="ev"><b>${e[0]}</b><p>${e[1]}</p></div>`).join('')}</div>${rel.length?'<h3>연결</h3><div class="pp">'+rel.map(l=>{const o=l[0]===p[0]?l[1]:l[0];return `<span class="c" onclick="goP('${o}')">${o} · ${l[2]}</span>`}).join('')+'</div>':''}<div class="pp" style="margin-top:12px"><span class="c" onclick="showV('m');goR('${p[1]}')">지도에서 ${r.n} 열기</span></div><div class="ft">출처: 박영철 석사학위논문 ${r.pg}</div></div>`;PN.scrollIntoView({behavior:'smooth',block:'nearest'})}
+function goP(c){const t=c.split(/[( ·]/)[0],i=P.findIndex(p=>c.includes(p[0].split(/[( ·]/)[0])||p[0].includes(t));if(i<0)return;showV('n');sel(i)}
+const oldDm=dm.onclick;
+dm.onclick=()=>{if(view!=='n')return oldDm();const s=document.getElementById('nsv').cloneNode(true),vb=s.getAttribute('viewBox').split(' ');s.setAttribute('width',vb[2]*2.5);s.setAttribute('height',vb[3]*2.5);
+const im=new Image();im.onload=()=>{const cv=document.createElement('canvas');cv.width=vb[2]*2.5;cv.height=vb[3]*2.5;cv.getContext('2d').drawImage(im,0,0);dl(cv,'사경회_연도별_인물_네트워크.png')};
+im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(s))};
+</script></body></html>

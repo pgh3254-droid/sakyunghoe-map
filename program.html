@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>한국 감리교 사경회 관계망도 — 단독 오프라인 실행판</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Noto+Serif+KR:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0b0d13; color: #e2e8f0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Serif KR", sans-serif; line-height: 1.6; }
+  header { background: #11141d; border-bottom: 1px solid #27272a; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; flex-wrap: wrap; gap: 12px; }
+  .brand { font-family: 'Noto Serif KR', serif; font-size: 18px; color: #fef08a; font-weight: 700; letter-spacing: -0.5px; }
+  nav { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  nav button { background: none; border: none; color: #a1a1aa; padding: 6px 12px; font-size: 13px; font-family: 'Noto Serif KR', serif; cursor: pointer; border-radius: 6px; transition: 0.2s; }
+  nav button:hover, nav button.active { color: #fef08a; background: #27272a; font-weight: 700; }
+  .btn-download { background: linear-gradient(90deg, #f59e0b, #d97706); color: #000; font-weight: 800; padding: 7px 14px; border-radius: 8px; border: none; cursor: pointer; font-size: 12px; transition: 0.2s; margin-left: 8px; }
+  .btn-download:hover { background: #fbbf24; }
+  .container { max-width: 1280px; margin: 0 auto; padding: 24px 16px; }
+  .grid-5 { display: grid; grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)); gap: 16px; margin: 24px 0; }
+  .card { perspective: 1200px; height: 490px; cursor: pointer; user-select: none; }
+  .card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1); transform-style: preserve-3d; border-radius: 12px; }
+  .card.flipped .card-inner { transform: rotateY(180deg); }
+  .card.glowing { box-shadow: 0 0 30px rgba(245, 158, 11, 0.7); border: 2px solid #f59e0b; border-radius: 12px; animation: glowPulse 2s infinite ease-in-out; }
+  @keyframes glowPulse { 0%, 100% { box-shadow: 0 0 15px rgba(245,158,11,0.5); } 50% { box-shadow: 0 0 35px rgba(245,158,11,0.9); } }
+  .card-front, .card-back { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid #3f3f46; background: #161822; }
+  .card-back { transform: rotateY(180deg); background: #1c1815; border-color: #78350f; overflow-y: auto; }
+  .card-title { font-family: 'Noto Serif KR', serif; font-size: 22px; font-weight: bold; color: #fef08a; margin-top: 6px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 12px; font-family: 'Noto Serif KR', serif; }
+  th, td { border: 1px solid #3f3f46; padding: 8px 10px; }
+  th { background: #27272a; color: #fef08a; text-align: left; }
+  tr:hover { background: #1f2230; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+  .badge { display: inline-block; padding: 2px 8px; font-size: 11px; border-radius: 9999px; background: #78350f; color: #fef08a; font-weight: 600; }
+  .clickable-person { color: #fef08a; font-weight: 700; text-decoration: underline; text-decoration-color: rgba(245, 158, 11, 0.5); cursor: pointer; transition: color 0.15s; }
+  .clickable-person:hover { color: #ffffff; text-decoration-color: #fef08a; }
+  /* Modal */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
+  .modal-box { background: #141624; border: 2px solid #f59e0b; border-radius: 16px; padding: 28px; max-width: 650px; width: 100%; max-height: 88vh; overflow-y: auto; position: relative; box-shadow: 0 0 50px rgba(245,158,11,0.3); font-family: 'Noto Serif KR', serif; }
+  .modal-close { position: absolute; top: 16px; right: 16px; background: #27272a; border: 1px solid #3f3f46; color: #e2e8f0; border-radius: 8px; width: 28px; height: 28px; cursor: pointer; font-size: 16px; }
+  /* Network Canvas (White Background for High Contrast & Legibility) */
+  .network-layout { display: flex; height: 700px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; margin-top: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.06); }
+  .network-canvas-wrap { flex: 1; height: 100%; position: relative; background: #ffffff; }
+  .network-sidebar { width: 320px; background: #f8fafc; border-left: 1px solid #e2e8f0; padding: 16px; overflow-y: auto; font-family: 'Noto Serif KR', serif; font-size: 12px; color: #1e293b; }
+  /* Timeline Map Layout */
+  .timelinemap-wrap { display: flex; flex-direction: column; gap: 16px; margin-top: 14px; }
+  @media (min-width: 900px) {
+    .timelinemap-wrap { flex-direction: row; align-items: flex-start; }
+    .timelinemap-map-box { flex: 1.1; }
+    .timelinemap-detail-box { flex: 1; }
+  }
+  .era-btn { padding: 6px 14px; border-radius: 9999px; background: #27272a; border: 1px solid #3f3f46; color: #d4d4d8; font-size: 12px; cursor: pointer; transition: 0.2s; white-space: nowrap; font-family: 'Noto Serif KR', serif; }
+  .era-btn:hover, .era-btn.active { background: #f59e0b; color: #000; font-weight: bold; border-color: #f59e0b; box-shadow: 0 0 12px rgba(245,158,11,0.4); }
+  .region-chip { padding: 4px 10px; border-radius: 8px; background: #1e293b; border: 1px solid #334155; color: #f1f5f9; font-size: 11px; cursor: pointer; transition: 0.2s; white-space: nowrap; font-family: 'Noto Serif KR', serif; }
+  .region-chip:hover, .region-chip.active { background: #f59e0b; color: #000; font-weight: bold; border-color: #f59e0b; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">한국 감리교 사경회 관계망도 (단독 오프라인 실행판)</div>
+  <nav>
+    <button class="active" data-tab="pillars" onclick="showTab('pillars', this)">5대 핵심 기제</button>
+    <button data-tab="network" onclick="showTab('network', this)">전체 관계망도</button>
+    <button data-tab="timelinemap" onclick="showTab('timelinemap', this)">연도별 지역 지도망 <span style="background:rgba(239,68,68,0.25); color:#fca5a5; padding:1px 6px; border-radius:10px; font-size:10px; font-weight:bold;">1908</span></button>
+    <button data-tab="relations" onclick="showTab('relations', this)">6대 관계표 (224선)</button>
+    <button data-tab="chains" onclick="showTab('chains', this)">지역별 사슬 구조</button>
+    <button data-tab="comparison" onclick="showTab('comparison', this)">감리교 vs 장로교</button>
+    <button class="btn-download" onclick="downloadCSV()">224선 CSV 저장</button>
+  </nav>
+</header>
+
+<main class="container">
+  <!-- 1. 5 PILLARS TAB -->
+  <div id="tab-pillars" class="tab-content active">
+    <div style="text-align: center; margin-bottom: 20px;">
+      <span class="badge">박영철 석사학위논문(2026) 분석 모델</span>
+      <h2 style="font-size: 26px; margin-top: 8px; color: #fff; font-family: 'Noto Serif KR', serif;">5대 핵심 기제 인터랙티브 카드 회랑</h2>
+      <p style="color: #a1a1aa; font-size: 13px;">카드를 클릭하면 1차 내용이 등장하고, 텍스트를 다시 클릭하면 2차 심화 연구 내용으로 전환되어 황금빛으로 점화됩니다.</p>
+    </div>
+
+    <div class="grid-5" id="pillars-container"></div>
+
+    <div id="mission-complete-bar" style="margin-top: 20px; padding: 16px; background: #18181b; border: 1px solid #3f3f46; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: gap;">
+      <div style="font-size: 13px; color: #d4d4d8;">
+        점화 상태: <strong id="glow-count" style="color: #fef08a;">0 / 5 완료</strong>
+      </div>
+      <div>
+        <button onclick="unlockAllPillars()" style="background: #27272a; border: 1px solid #3f3f46; color: #e2e8f0; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;">5개 카드 일괄 점화</button>
+        <button onclick="showTab('network')" style="background: #f59e0b; color: #000; font-weight: bold; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; margin-left: 8px;">전체 관계망도 이동 →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. NETWORK GRAPH TAB -->
+  <div id="tab-network" class="tab-content">
+    <div style="display: flex; gap: 8px; margin-bottom: 12px; background: #181b28; padding: 6px; border-radius: 8px; border: 1px solid #334155; width: fit-content;">
+      <button type="button" style="padding: 6px 14px; border-radius: 6px; background: #f59e0b; color: #000; font-weight: bold; border: none; font-size: 12px; cursor: pointer;">🌐 1. 전체 종합 원형망 (224선)</button>
+      <button type="button" onclick="showTab('timelinemap')" style="padding: 6px 14px; border-radius: 6px; background: #27272a; color: #e2e8f0; font-weight: bold; border: 1px solid #3f3f46; font-size: 12px; cursor: pointer;">🗺️ 2. 연도별 지역 지도망 & 사슬망 (1908년 지도) 🔥</button>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+      <div>
+        <h2 style="font-size: 20px; color: #fff;">사경회 전체 관계망도 (인터랙티브 맵)</h2>
+        <p style="font-size: 12px; color: #a1a1aa;">노드를 클릭하면 연결된 선이 강조되고 우측 상세 서랍에 인물/지역/핵심어 정보가 나타납니다.</p>
+      </div>
+      <div style="display: flex; gap: 6px;">
+        <button onclick="resetGraphView()" style="background: #27272a; border: 1px solid #3f3f46; color: #fff; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 11px;">뷰 초기화</button>
+      </div>
+    </div>
+
+    <div class="network-layout">
+      <div class="network-canvas-wrap">
+        <svg id="network-svg" width="100%" height="100%" viewBox="0 0 1000 680" style="cursor: grab; background: #ffffff;">
+          <rect width="1000" height="680" fill="#ffffff"></rect>
+          <g id="svg-root">
+            <g id="svg-edges"></g>
+            <g id="svg-nodes"></g>
+          </g>
+        </svg>
+      </div>
+      <div class="network-sidebar" id="network-sidebar">
+        <h4 style="color: #0f172a; font-size: 14px; margin-bottom: 8px; font-weight: 700;" id="sidebar-title">노드를 선택하세요</h4>
+        <div id="sidebar-content" style="color: #475569; line-height: 1.6;">
+          관련 인물, 지역, 핵심어를 맵에서 클릭하면 논문 분석 내용이 표시됩니다.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2.5 TIMELINE REGIONAL MAP TAB -->
+  <div id="tab-timelinemap" class="tab-content">
+    <div style="display: flex; gap: 8px; margin-bottom: 12px; background: #181b28; padding: 6px; border-radius: 8px; border: 1px solid #334155; width: fit-content;">
+      <button type="button" onclick="showTab('network')" style="padding: 6px 14px; border-radius: 6px; background: #27272a; color: #e2e8f0; font-weight: bold; border: 1px solid #3f3f46; font-size: 12px; cursor: pointer;">🌐 1. 전체 종합 원형망 (224선)</button>
+      <button type="button" style="padding: 6px 14px; border-radius: 6px; background: #f59e0b; color: #000; font-weight: bold; border: none; font-size: 12px; cursor: pointer;">🗺️ 2. 연도별 지역 지도망 & 사슬망 (1908년 지도) 🔥</button>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
+      <div>
+        <div style="font-size: 11px; color: #fbbf24; font-weight: bold; text-transform: uppercase;">
+          박영철(2026) 제Ⅲ장(해외기원) · 제Ⅳ-3장(지역별 분석) · 제Ⅵ장(장로교 비교)
+        </div>
+        <h2 style="font-size: 20px; color: #fff; margin-top: 2px;">연도별 지역 지도망 & 시공간 사슬 네트워크 (1890s~1936)</h2>
+        <p style="font-size: 12px; color: #a1a1aa;">
+          연도(1900s, 1908년 등)를 선택하여 선교 사슬을 확인하고, 지도에서 평양·서울 등 지역을 클릭하면 모든 정보가 우측에 표시됩니다.
+        </p>
+      </div>
+    </div>
+
+    <!-- Timeline Era Selector Buttons -->
+    <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 10px;" id="timelinemap-era-buttons"></div>
+
+    <!-- Era Banner -->
+    <div id="timelinemap-era-banner" style="background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.35); padding: 10px 14px; border-radius: 10px; margin-bottom: 14px; font-size: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;"></div>
+
+    <!-- Quick Region Chips -->
+    <div style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 12px;" id="timelinemap-region-chips"></div>
+
+    <div class="timelinemap-wrap">
+      <!-- Left: SVG Map -->
+      <div class="timelinemap-map-box" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 14px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.06);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">
+          <span style="font-size: 12px; font-weight: bold; color: #0f172a;">🗺️ 한반도 사경회 거점망 & 해외 기원도</span>
+          <span style="font-size: 11px; color: #64748b;">(원 클릭 시 상세 정보 즉시 전환)</span>
+        </div>
+        <div style="width: 100%; aspect-ratio: 600/700; max-height: 640px;">
+          <svg id="timeline-svg" width="100%" height="100%" viewBox="0 0 600 700" style="background: #f8fafc; border-radius: 8px;">
+            <defs>
+              <linearGradient id="offlineCoast" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#f1f5f9" />
+                <stop offset="100%" stop-color="#e2e8f0" />
+              </linearGradient>
+              <marker id="off-arrow-inflow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                <path d="M 0 1 L 9 5 L 0 9 z" fill="#0284c7" />
+              </marker>
+              <marker id="off-arrow-chain" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                <path d="M 0 1 L 9 5 L 0 9 z" fill="#dc2626" />
+              </marker>
+              <marker id="off-arrow-revival" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                <path d="M 0 1 L 9 5 L 0 9 z" fill="#d97706" />
+              </marker>
+            </defs>
+
+            <!-- Peninsula Contour -->
+            <path d="M 170 120 C 220 90, 360 80, 430 110 C 480 130, 500 170, 480 230 C 460 270, 420 310, 420 360 C 430 420, 460 480, 440 540 C 420 590, 370 630, 300 640 C 230 630, 200 570, 220 500 C 240 460, 260 420, 250 370 C 230 330, 190 280, 180 220 C 160 180, 150 140, 170 120 Z" fill="url(#offlineCoast)" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="4 2" />
+            <text x="130" y="380" fill="#94a3b8" font-size="13" font-family="serif" font-weight="bold">황 해 (西海)</text>
+            <text x="470" y="340" fill="#94a3b8" font-size="13" font-family="serif" font-weight="bold">동 해 (東海)</text>
+            <text x="320" y="670" fill="#94a3b8" font-size="12" font-family="serif" font-weight="bold">남 해</text>
+
+            <!-- Overseas Origin Box -->
+            <g id="off-origin-box" transform="translate(20, 20)" style="cursor: pointer;" onclick="selectTimelineRegion('overseas_origin')">
+              <rect width="180" height="70" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="2" />
+              <text x="12" y="24" fill="#7c3aed" font-size="11" font-weight="bold">🌐 해외 기원 (논문 제Ⅲ장)</text>
+              <text x="12" y="44" fill="#0f172a" font-size="13" font-weight="bold">미국 샤토콰 & 선교본부</text>
+              <text x="12" y="60" fill="#64748b" font-size="10">샤토콰 성경연구 · 무디 부흥</text>
+            </g>
+
+            <!-- Links Group -->
+            <g id="off-map-links"></g>
+            <!-- Nodes Group -->
+            <g id="off-map-nodes"></g>
+          </svg>
+        </div>
+        <div style="margin-top: 8px; font-size: 11px; color: #64748b; display: flex; justify-content: space-between;">
+          <span>💡 붉은 점선: 자생적 사슬 연결망 | 푸른선: 해외 유입로 | 주황선: 부흥 전파로</span>
+          <span>선택된 지역: <strong id="timelinemap-current-name" style="color: #b45309;">평양</strong></span>
+        </div>
+      </div>
+
+      <!-- Right: All-in-One Detail Explorer Box -->
+      <div class="timelinemap-detail-box" id="timelinemap-detail-box" style="background: #111420; border: 1px solid #3f3f46; border-radius: 12px; padding: 18px; font-family: 'Noto Serif KR', serif; max-height: 700px; overflow-y: auto;"></div>
+    </div>
+  </div>
+
+  <!-- 3. 224 RELATIONS TAB -->
+  <div id="tab-relations" class="tab-content">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+      <div>
+        <h2 style="font-size: 20px; color: #fff;">6대 관계 범주 데이터셋 (224건) & 인물 사전</h2>
+        <p style="font-size: 12px; color: #a1a1aa;">인물 이름을 클릭하면 인물 소개 및 논문 본문 인용 팝업이 즉시 열립니다.</p>
+      </div>
+      <input type="text" id="relation-search" placeholder="인물(최병헌 등), 지역, 쪽수 검색..." oninput="filterRelations()" style="padding: 7px 12px; background: #27272a; border: 1px solid #3f3f46; color: #fff; border-radius: 6px; font-size: 12px; min-width: 240px;">
+    </div>
+
+    <!-- Quick Person Bio Bar -->
+    <div style="background: #181b28; border: 1px solid rgba(245,158,11,0.35); border-radius: 12px; padding: 12px; margin-bottom: 14px;">
+      <div style="font-size: 12px; font-weight: bold; color: #fef08a; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+        <span>👤 41인 인물 인사이클로피디아 빠른 탐색 (클릭 시 인물 소개 즉시 실행)</span>
+      </div>
+      <div id="quick-persons-bar" style="display: flex; flex-wrap: wrap; gap: 6px; max-height: 100px; overflow-y: auto;"></div>
+    </div>
+
+    <div style="overflow-x: auto; background: #12141e; border: 1px solid #27272a; border-radius: 12px;">
+      <table id="relations-table">
+        <thead>
+          <tr>
+            <th style="width: 45px; text-align: center;">No.</th>
+            <th style="width: 170px;">범주</th>
+            <th style="width: 190px;">출발 항목 (A)</th>
+            <th style="width: 190px;">도착 항목 (B)</th>
+            <th>관계 설명</th>
+            <th style="width: 90px; text-align: center;">논문 쪽수</th>
+          </tr>
+        </thead>
+        <tbody id="relations-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 4. REGIONAL CHAINS TAB -->
+  <div id="tab-chains" class="tab-content">
+    <h2 style="font-size: 20px; color: #fff; margin-bottom: 4px;">지역별 4단계 자생적 사슬 구조</h2>
+    <p style="font-size: 12px; color: #a1a1aa; margin-bottom: 16px;">사경회 → 전도부인·지도자 → 성경반 → 지역교회 환류 고리 (논문 3쪽)</p>
+    <div id="chains-container"></div>
+  </div>
+
+  <!-- 5. COMPARISON TAB -->
+  <div id="tab-comparison" class="tab-content">
+    <h2 style="font-size: 20px; color: #fff; margin-bottom: 4px;">감리교 vs 장로교 사경회 비교사적 대조 (표 5)</h2>
+    <p style="font-size: 12px; color: #a1a1aa; margin-bottom: 16px;">웨슬리안 방법론(사회적 성화)과 네비어스 정책(교리적 자립)의 8대 비교</p>
+    <div id="comparison-container"></div>
+  </div>
+</main>
+
+<!-- PERSON DETAIL MODAL -->
+<div class="modal-overlay" id="person-modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closePersonModal()">×</button>
+    <div style="font-size: 11px; color: #f59e0b; font-weight: bold; text-transform: uppercase;">인물 심층 프로필</div>
+    <h3 id="modal-person-name" style="font-size: 24px; color: #fff; margin: 4px 0 12px 0;"></h3>
+    <div id="modal-person-role" style="font-size: 12px; color: #fbbf24; margin-bottom: 16px;"></div>
+
+    <div style="background: #1f2230; padding: 12px; border-radius: 8px; margin-bottom: 12px; font-size: 12px;">
+      <strong style="color: #fef08a; display: block; margin-bottom: 4px;">주요 사역 및 역사적 행적</strong>
+      <p id="modal-person-action" style="color: #e2e8f0; text-align: justify;"></p>
+    </div>
+
+    <div style="background: #1f2230; padding: 12px; border-radius: 8px; margin-bottom: 12px; font-size: 12px;">
+      <strong style="color: #38bdf8; display: block; margin-bottom: 4px;">역사신학적 의의</strong>
+      <p id="modal-person-sig" style="color: #cbd5e1; text-align: justify;"></p>
+    </div>
+
+    <div style="background: rgba(120,53,15,0.25); border-left: 3px solid #f59e0b; padding: 10px; margin-bottom: 16px; font-size: 12px; font-style: italic;" id="modal-person-quote-box">
+      <p id="modal-person-quote" style="color: #fef08a;"></p>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #27272a; pt: 12px; font-size: 11px; color: #71717a;">
+      <span id="modal-person-pages"></span>
+      <button onclick="closePersonModal()" style="background: #27272a; color: #fff; border: 1px solid #3f3f46; padding: 5px 12px; border-radius: 6px; cursor: pointer;">닫기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const pillarsData = [{"id":"sakyunghoe","titleKo":"사경회","titleHanja":"査經會","subtitle":"평신도 신앙 형성과 영적 각성의 거룩한 모판","frontSummary":"성경 공부(査經)와 부흥회(Revival)가 결합된 한국 기독교 고유의 복합적 평신도 훈련 기제","frontBullets":["자비량(自費糧) 원칙: 쌀과 찬을 짊어지고 수십·수백 리를 도보로 이동","웨슬리안 실천신학의 한국적 구현: 성화(Sanctification)와 공동체 책임","1907년 평양대부흥의 직접적 모태 및 1936년 연간 2,344개 집회로 확산"],"back1Title":"영적 각성과 자발적 헌신의 폭발","back1Content":"사경회는 단순한 서구식 성경 강습회가 아니었다. 농한기인 겨울철과 여름 장마철을 활용하여 일주일에서 한 달간 합숙하며 말씀을 연구했다. 참석자들은 외부 지원 없이 자비량으로 참여하였으며, 통회 자복의 기도와 성령 체험을 거쳐 삶의 전방위적 거룩함을 결단했다.","back1Quote":"“사경회는 곧 교회의 생명이며, 매년 겨울 우리에게 부흥을 가져다준다.”","back1Source":"『The Korea Mission Field』 11, no. 11 (1915): 317","back2Title":"3층 구조의 자기재생산 훈련 기제","back2Content":"총 선교부(General Class) → 구역(District Class) → 지교회(Local Class)로 이어지는 3층 구조를 확립하여, 배움이 곧바로 사역으로 전환되는 교육 생태계를 구축했다. 수강생이 다음 사경회의 강사로 파송되는 선순환은 한국 교회의 강력한 자생력을 낳았다.","back2Quote":"“1936년 한 해 동안 전국에서 2,344개의 1주일 단위 전일제 사경회가 열려 전체 교인의 50%가 넘는 178,318명이 참여했다.”","back2Source":"Charles Allen Clark, The Nevius Plan (1937), 240–245","theologyNote":"지식 습득에 머물지 않고 일상의 실천으로 나아가는 웨슬리안 은총론과 성화론의 토착화","relatedRegions":["서울(경성)","평양","선천","강화","해주·황해","수원·경기","청주"],"relatedPersons":["하디","스크랜턴","아펜젤러","스왈런","마펫","존스"]},{"id":"region","titleKo":"지역","titleHanja":"地域","subtitle":"8대 주거점 및 2대 보조지역의 선교 지형도","frontSummary":"각 지역의 역사적·사회문화적 조건 속에서 독자적으로 전개된 10대 사경회 거점망","frontBullets":["서울·인천·강화: 중앙 신학 허브, 개항장 변증, 강화도 14일 장기 합숙","평양·선천·해주: 영적 대각성, 날 연보 625일 서약, 3단계 분권망","수원·청주·원산·전라: 34개 교회 평신도망, 농사력 반영 하계 사경회, 10년 장기 커리큘럼"],"back1Title":"8대 주거점의 독자적 신앙 양상","back1Content":"① 서울(정동·상동·승동·종교교회: 신학훈련 및 여성 대공론장) ② 인천(내리교회: 세속화 방어 및 3개 학년제) ③ 강화(14일 장기합숙 및 홍승하 8개교회 자생 개척) ④ 평양(남산현·장대현: 1~4학년제 및 여성교사 13인) ⑤ 선천(남·북교회: 날 연보 및 누 씨의 단독 개척) ⑥ 해주·황해(도·지방·지역 3단계 및 사범훈련) ⑦ 수원(34개 교회망 및 교리·축호전도·부흥강연 일과) ⑧ 청주(7월 하계사경회, 입학시험 3등급, 목사 장립례식 거행).","back1Quote":"“지역마다 사경회가 서로 다른 방식으로 전개되었다는 사실은 한국 민중이 능동적으로 재창조한 신앙 훈련의 공간이었음을 방증한다.”","back1Source":"박영철(2026), 56쪽","back2Title":"보조 2개 권역 및 6대 관계망 접점","back2Content":"⑨ 원산(1903 하디의 영적 교만 공개 회개로 1907 대부흥의 도화선) ⑩ 전라(전주·광주·목포: 남장로교 10년 장기 커리큘럼, 서면 시험 강제 및 테이트 순회 성경반). 이 10개 지역은 ①인물↔인물(14선) ②인물↔지역(49선) ③인물↔교과(34선) ④교과↔핵심어(58선) ⑤핵심어↔지역(52선) ⑥사슬(17선)의 224개 관계망으로 정밀하게 연동됩니다.","back2Quote":"“감리교는 사회적 성화와 포용적 외연 확장을, 장로교는 자립 원칙과 교리적 정통성을 지향하며 상호 보완적으로 전개되었다.”","back2Source":"박영철(2026), 140쪽 (표 5)","theologyNote":"피선교지 민중이 삶의 자리에서 일군 자생적 토착화(Indigenization)와 지리적 네트워크","relatedRegions":["서울(경성)","인천·제물포","강화","평양","선천","해주·황해","수원·경기","청주","원산","전라"],"relatedPersons":["스크랜턴","아펜젤러","G.H. 존스","마펫","스왈런","체이스","샤프","버딕","민노아","하디","테이트"]},{"id":"bible_women","titleKo":"전도부인","titleHanja":"傳道婦人","subtitle":"조선 여성의 해방과 풀뿌리 복음의 실천자 (Bible Women)","frontSummary":"유교적 내외법을 넘어 규방과 안방으로 파고들어 문해 교육과 목회적 돌봄을 감당한 여성 지도자","frontBullets":["삼중 매개 역할: 문화 간 매개자, 교육적 매개자(한글 교육), 영적 매개자(신유·상담)","수료증(Diploma): 여성이 자신의 이름으로 획득한 근대 최초의 공적 자격 증명","김세지·장부인·오씨부인·재령 전도부인·누 씨 등 기층 여성의 역동적 지도력"],"back1Title":"가부장적 침묵을 깬 공적 발화의 훈련장","back1Content":"전도부인은 성경 판매인을 넘어선 목회적 돌봄자이자 계몽가였다. 유교 가부장제 안에서 이름조차 없던 여성들이 사경회에서 한글을 깨치고 말씀을 연구하여, 남성 중심 사회에서 당당한 영적 지도자로 발돋움했다. 과부와 하층민 출신 여성들이 교회의 핵심 리더십으로 부상했다.","back1Quote":"“한국 남성이 한국 여성에게 가르침을 받는 특권을 간청하는 것을 상상해 보라. 세상이 위아래로 뒤집어지고 있다.”","back1Source":"Ethel M. Estey, KMF 7, no. 11 (1911): 327","back2Title":"교사들의 교사로 성장한 여성 사역자","back2Content":"평양 사경회에서는 13명의 현지 여성이 500여 명의 초신자 반을 전담했고, 해주에서는 오전 이론 연구 후 오후 청중 앞 설교 시연을 거치는 사범 훈련(Normal Class)이 확립되었다. 선천의 ‘누 씨’는 단기 사경회 수강 후 홀로 산길을 걸어 강계 7개 교회의 사경회를 인도했다.","back2Quote":"“김세지는 26년간 연 2,000회 이상 심방하고, 과부회 창설 및 임시정부 군자금 2,400원을 송금하며 독립운동에 헌신했다.”","back2Source":"박영철(2026), 41쪽; 윤정란(2003)","theologyNote":"모든 신자가 하나님 앞에서 존엄한 제사장이라는 만인제사장직(Priesthood of All Believers)의 실천적 승리","relatedRegions":["서울","평양","선천","해주·황해","수원·경기","전라"],"relatedPersons":["김세지","장부인","오씨부인","누 씨","재령 전도부인","곽씨","정 씨 부인","마거릿 베스트"]},{"id":"regional_education","titleKo":"지역교육","titleHanja":"地域敎育","subtitle":"성경 중심성과 실천적 근대 학문의 융합 커리큘럼","frontSummary":"단순한 교리 주입을 넘어 위생학, 한글 해독, 가정 규범, 절제 운동을 포괄한 전인적 교육 체계","frontBullets":["24개 특화 교과: 바느질 성경반부터 7등급 분반, 사범 방식, 고도화된 학제화까지","생활 개혁 교과: 위생학, 육아법, 영아 돌봄, 금주·단연 절제(Temperance) 운동","전통 서당의 독경·암송 문화를 기독교적 참여형 학습(Normal Method)으로 승화"],"back1Title":"삶의 자리에서 피어난 통합 커리큘럼","back1Content":"사경회 교과는 성경 본문 중심성을 굳게 지키면서도 조선 민중의 구체적 고통에 응답했다. 콜레라와 영아 사망률이 높던 시기 위생학과 육아법을 가르쳐 미신적 질병관을 극복시켰고, 1920년대에는 기독교여자절제회와 연계하여 과학적 금주·단연 교육을 정규 교과로 편입했다.","back1Quote":"“오전의 이론 교육과 오후의 전도 실습, 저녁의 기도 평가는 지식-실천-성찰의 삼위일체적 신앙 형성 원리였다.”","back1Source":"박영철(2026), 60쪽","back2Title":"근대적 학제화(Schooling)로의 진화","back2Content":"단기 사경회는 점차 정규 학기제와 등급별 시험 제도를 갖춘 학교 체계로 심화되었다. 서울의 피어선기념성경학원과 협성여자신학교는 17개 정규 교과목(수신·성경·국어·한문·역사·지리·수학·이과·가사·음악 등)을 가르치는 대안적 근대 여성 대학으로 기능했다.","back2Quote":"“충북 청주 사경회는 입학시험 제도를 도입해 초·중·고급 3개 등급으로 엄격히 분반하여 근대 학교 수준의 교육을 실시했다.”","back2Source":"F. S. Miller, KMF 6, no. 6 (1910): 163","theologyNote":"영혼 구원과 사회적 변혁을 하나로 묶은 존 웨슬리의 ‘사회적 성화(Social Holiness)’ 실천","relatedRegions":["서울","평양","선천","청주","인천·제물포","수원·경기"],"relatedPersons":["헤론 부인","노블 부인","스네이블리","크리스틴 틴링","정인과","오긍선"]},{"id":"bible_class","titleKo":"성경반","titleHanja":"聖經班","subtitle":"사경회를 넘어 일상의 상설 학습 공동체로","frontSummary":"사경회 수료생들이 귀향 후 자발적으로 개설한 기도처와 소그룹 성경공부반 (Bible Study Classes)","frontBullets":["자발적 개설 붐: 사경회 수료 후 1년 만에 전국 수십~수백 곳의 자생 성경반 탄생","가정 성경 연구(Home Bible Study): 원격 통신 과제를 통한 연중 지속 학사 관리","성서학원(Bible Institutes) 체제로의 심화 및 자립적 지역 교회 개척의 산실"],"back1Title":"평신도가 주도한 거룩한 자생 네트워크","back1Content":"사경회가 끝난 뒤 신자들은 흩어져 침묵하지 않았다. 자신이 배운 복음을 가슴에 품고 자기 마을의 사랑방과 안방에 모여 ‘성경반(Bible Study Class)’을 열었다. 선교사가 없는 오지 마을에서도 평신도 조장과 속장의 인도 아래 매주 모여 성경을 공부하고 예배를 이어갔다.","back1Quote":"“사경회 수료 후 평신도들이 스스로 개설한 성경반의 수가 1년 사이에 전국적으로 수십 곳에 달하였다.”","back1Source":"『기독신보』 1921년 4월 28일자, 2면","back2Title":"기도처에서 지역 교회로의 비약","back2Content":"가정 성경반과 기도처는 이웃들의 폭발적 호응을 얻으며 수용 한계를 넘어서게 되었고, 민중들은 스스로 흙을 이기고 짚을 얹어 예배당을 건축하여 정식 지역 교회로 발전시켰다. 이로써 외부 선교 자금에 의존하지 않는 자립(Self-support), 자치(Self-government), 자전(Self-propagation)의 토착 교회가 완성되었다.","back2Quote":"“성경반에서 은혜를 받은 환자가 퇴원 후 고향으로 돌아가 15명을 개종시키고 외국 자금 없이 독립된 기도처를 설립했다.”","back2Source":"Archibald G. Fletcher, KMF 12, no. 10 (1916): 264–265","theologyNote":"외래 교회의 수동적 신자가 아니라 복음의 주체적 생산자로 거듭난 조선 평신도 운동의 위대한 결실","relatedRegions":["서울","인천·제물포","평양","해주·황해","전라","수원·경기"],"relatedPersons":["윤충일","예순화","백사겸","홍승하","매티 테이트","조세핀 맥커천"]}];
+  const nodesData = [{"id":"hub_sakyunghoe","label":"사경회","nameHanja":"査經會","type":"hub","desc":"한국 감리교 평신도 운동의 핵심 기제이자 영적 훈련소","page":"48-52","x":550,"y":290},{"id":"hub_bible_women","label":"전도부인","nameHanja":"傳道婦人","type":"hub","desc":"풀뿌리 선교와 여성 공적 발화를 이끈 핵심 여성 지도자 직제","page":"39-43","x":635,"y":375},{"id":"hub_bible_class","label":"성경반","nameHanja":"聖經班/성서학원","type":"hub","desc":"사경회 수료 후 자발적으로 마을마다 개설된 상설 학습 조직","page":"113-122","x":550,"y":460},{"id":"hub_local_church","label":"지역교회","nameHanja":"地域敎會","type":"hub","desc":"성경반과 사경회를 통해 자생적으로 개척·성장한 신앙 공동체","page":"82, 114","x":465,"y":375},{"id":"reg_seoul","label":"서울(경성)","type":"region","desc":"사경회의 태동, 정동·상동 거점, 신학 훈련 및 도시 여성 초교파 연대","page":"56-63","x":550,"y":165},{"id":"reg_incheon","label":"인천·제물포","type":"region","desc":"개항장 세속화 방어, 존스 부부 사역, 사범 방식(Normal Method) 도입","page":"63-68","x":685.1906080272688,"y":205.10643118126103},{"id":"reg_ganghwa","label":"강화","type":"region","desc":"섬의 고립성을 신학적 몰입으로 승화, 14일 장기 합숙 및 홍승하 자생 개척","page":"63-68","x":768.7429987478853,"y":310.10643118126103},{"id":"reg_pyongyang","label":"평양","type":"region","desc":"영적 각성과 대중 지성 공동체, 1907 대부흥의 진원지, 수준별 4학년 학제화","page":"68-74","x":768.7429987478853,"y":439.89356881873897},{"id":"reg_syenchun","label":"선천","type":"region","desc":"‘날 연보’의 발상지, 2,602명 대규모 여성 사경회 및 자생적 순회 전도","page":"74-79","x":685.1906080272688,"y":544.8935688187389},{"id":"reg_haiju","label":"해주·황해","type":"region","desc":"도·지방·지역 사경회 3단계 분권망, 전도부인 사범 훈련, 자생적 신앙 공동체","page":"79-84","x":550,"y":585},{"id":"reg_suwon","label":"수원·경기","type":"region","desc":"34개 교회 평신도 치리망, 주간 교리·오후 축호전도·야간 부흥회 삼중 일과","page":"85-89","x":414.8093919727312,"y":544.8935688187389},{"id":"reg_cheongju","label":"청주","type":"region","desc":"농사력 반영 7월 하계 사경회, 엄격한 입학시험제 및 사경회 중 목사 장립례식","page":"89-91","x":331.2570012521147,"y":439.89356881873897},{"id":"reg_wonsan","label":"원산","type":"region","isSecondary":true,"desc":"1903년 하디 목사의 공개적 참회와 대부흥의 시발점 (보조 지역)","page":"110-111","x":331.25700125211466,"y":310.1064311812611},{"id":"reg_chulla","label":"전라","type":"region","isSecondary":true,"desc":"남장로교 거점, 10년 장기 커리큘럼, 서면 시험 강제 및 테이트 순회 성경반","page":"118, 120","x":414.8093919727312,"y":205.10643118126106},{"id":"p_scranton","label":"M.F. 스크랜턴","type":"person","desc":"이화학당 창립자, 보구여관 운영, 최초 부인 성경반 개설 및 수원 순회 지도","page":"61, 86, 105","isBibleWoman":false,"x":550,"y":15},{"id":"p_appenzeller","label":"아펜젤러","type":"person","desc":"배재학당 설립자, 정동 거점 남성 사경회 및 웨슬리 문답 번역","page":"56, 61","x":648.8864024970711,"y":23.416599944368784},{"id":"p_choi","label":"최병헌","type":"person","desc":"탁사 최병헌, 배재학당 교사, 한문 성경 독해 및 감리교 토착 민중목회 거목","page":"57, 59","x":743.1489867177218,"y":48.27284891845545},{"id":"p_heron","label":"헤론 부인","type":"person","desc":"1890년대 초 바느질과 성경 읽기를 결합한 실생활 부인 모임 조직","page":"59-60","x":828.380138989132,"y":88.40649634596826},{"id":"p_noble_mrs","label":"노블 부인","type":"person","desc":"1916년 최초 영어주일학교 교사훈련반 개설, 35년간 전국 주일학교 사역","page":"119","x":900.5945453587128,"y":141.94093747854208},{"id":"p_jones","label":"G.H. 존스 부부","type":"person","desc":"조원보 조지히버 존스 & 마가렛 존스, 제물포·강화 순회구역 및 사범방식 확립","page":"64-66","x":956.4155404451706,"y":206.37296134807556},{"id":"p_incheon_layman","label":"제물포 평신도 남성","type":"person","desc":"자비로 마가복음 60권 구입 배포, 130명 결신 및 30명 즉각 교회 등록","page":"65, 120","x":993.2329965588426,"y":278.68979812948044},{"id":"p_ganghwa_leader","label":"강화 평신도 지도자","type":"person","desc":"서울 사경회 수료 후 강화 10개 교회 순회 목회, 교인 40→130명 급증","page":"64-66","x":1009.325370371517,"y":355.50999290924966},{"id":"p_moffett","label":"마펫 (S.A. Moffett)","type":"person","desc":"평양 마펫병원·진료소 거점 사경회 개척, 1897 겨울사경회 인도","page":"69, 72","x":1003.9402003691021,"y":433.2415187589953},{"id":"p_swallen","label":"스왈런 (W.L. Swallen)","type":"person","desc":"평양 사경회 주도, 자립형 조사 40여 명에게 교회 위임, 통신성경과정 창안","page":"71, 117","x":977.3292911157241,"y":508.2497359223692},{"id":"p_best","label":"M. 베스트","type":"person","desc":"평양 여성사경회 및 평양여자성서학원(1915) 주관, 510명 교육 통솔","page":"70, 101","x":930.7369391521697,"y":577.0273435304576},{"id":"p_women_teachers","label":"한국인 여성 교사 13인","type":"person","isWomanLeader":true,"desc":"평양 사경회 수료 후 500여 명 초신자 대상 하위 3개 등급반 전담 교육","page":"70","x":866.3417510725749,"y":636.358377092327},{"id":"p_kim_seji","label":"김세지 (Sadie Kim)","type":"person","isBibleWoman":true,"desc":"감리교 대표 전도부인, 연 2,000회 심방, 과부회 창설, 임정 군자금 송금","page":"41","x":787.15477430143,"y":683.468583420332},{"id":"p_chase","label":"체이스 (M.L. Chase)","type":"person","desc":"1901년 선천 여성 사경회를 개척한 선교사","page":"75","x":696.8787038625509,"y":716.1551416258088},{"id":"p_samuel","label":"제인 사무엘","type":"person","desc":"1906년 선천 여성 사경회에서 16개 클래스 동시 운영, 2,602명 등록 지도","page":"75","x":599.7347484750132,"y":732.8896645755694},{"id":"p_kearns","label":"키언스 (C.E. Kearns)","type":"person","desc":"선천 겨울 사경회에서 자발적 날 연보 625일 서약 운동을 목격하고 보고","page":"75-76, 106","x":500.2652515249868,"y":732.8896645755694},{"id":"p_nu_ssi","label":"누 씨 (Nu Ssi)","type":"person","isWomanLeader":true,"desc":"선천 사경회 단기 수강 후 홀로 험산 넘어 강계 7개 교회 사경회 인도","page":"107","x":403.1212961374492,"y":716.1551416258089},{"id":"p_sharp","label":"찰스 샤프","type":"person","desc":"황해도 재령·해주 사경회 3단계 분권 조직망 운영 및 말씀 중심주의 고수","page":"80, 82-83","x":312.8452256985701,"y":683.4685834203322},{"id":"p_snavely","label":"스네이블리","type":"person","desc":"해주 여성 사경회 지도, 5색 세대주의 도표(Dispensational Chart) 시각교재 개발","page":"80, 102, 108","x":233.65824892742523,"y":636.3583770923271},{"id":"p_chairyung_bw","label":"재령 전도부인","type":"person","isBibleWoman":true,"desc":"황해도 재령연합병원 소속, 매주 토요일 여성 주일학교 교사들 재교육","page":"41","x":169.2630608478304,"y":577.0273435304578},{"id":"p_burdick","label":"G.M. 버딕","type":"person","desc":"수원 구역 순회선교사, 34개 교회 평신도 치리망 및 1928 남사경회 보고","page":"85-88","x":122.67070888427594,"y":508.24973592236915},{"id":"p_suwon_bw","label":"수원 파견 전도부인","type":"person","isBibleWoman":true,"desc":"스크랜턴 관리 아래 가정 방문 심방과 여학교 운영으로 수원 감리교 기초 확립","page":"86-87","x":96.059799630898,"y":433.2415187589953},{"id":"p_hong_byungseon","label":"홍병선","type":"person","desc":"1928년 수원 남사경회 야간 부흥 강연을 이끈 근대적 엘리트 지식인","page":"87-88","x":90.67462962848299,"y":355.50999290924995},{"id":"p_kwak_anryun","label":"곽안련 (C.A. Clark)","type":"person","desc":"평양신학교 실천신학 교수, 청주 사경회 강사, 네비어스 방법론 권위자","page":"90, 128","x":106.76700344115744,"y":278.68979812948044},{"id":"p_min_noah","label":"민노아 (F.S. Miller)","type":"person","desc":"청주 선교 개척자이자 청주 여성 겨울사경회·하계사경회 주강사","page":"89-90","x":143.58445955482932,"y":206.37296134807573},{"id":"p_hardie","label":"R.A. 하디","type":"person","desc":"1903년 원산 사경회에서 공개적 죄 고백, 1907 평양대부흥의 영적 도화선","page":"110-111","x":199.40545464128706,"y":141.9409374785422},{"id":"p_tate","label":"매티 테이트","type":"person","desc":"전주를 거점으로 호남 남부 농촌 여성들을 위한 순회 성경반 개척","page":"118","x":271.6198610108679,"y":88.40649634596832},{"id":"p_jung_buin","label":"정 씨 부인","type":"person","isBibleWoman":true,"desc":"전라 구역 성경공부반 인도 중 과로 소천, 교인들의 신앙 연대","page":"120","x":356.85101328227813,"y":48.27284891845551},{"id":"p_kim_seondu","label":"김선두 목사","type":"person","desc":"평양에서 활동하며 선천·해주 대사경회 주강사로 초빙된 명설교가","page":"75, 81","x":451.1135975029288,"y":23.416599944368784}];
+  const keywordsData = [{"id":"kw_bible_primacy","label":"성경 본문 중심성","desc":"설교 청취를 넘어 성경 텍스트 자체를 강독·암송하는 절대적 학습 원리","page":"66, 83"},{"id":"kw_action_oriented","label":"실천 지향(전도 실습)","desc":"오전 이론 교육 후 오후 노방 전도 및 축호 전도로 즉각 실천 연계","page":"59, 71, 88"},{"id":"kw_graded_system","label":"수용자 맞춤·등급제","desc":"문해력과 신앙 연조에 따른 3~7단계 수준별 분반 및 학사 관리","page":"73, 77, 90, 122"},{"id":"kw_self_support","label":"자립·자비량","desc":"외부 선교부 재정 의존 없이 신자들이 숙식비와 훈련비를 스스로 조달","page":"64, 68, 76"},{"id":"kw_self_propagation","label":"자전(자생 전도)","desc":"훈련받은 평신도들이 직접 복음 전도자가 되어 교회를 자율 개척","page":"66, 70, 76"},{"id":"kw_nal_yunbo","label":"날 연보 (日捐補)","desc":"돈 대신 자신의 생업 시간을 바쳐 복음 전도일로 헌납한 자발적 실천","page":"75-77, 112"},{"id":"kw_revival","label":"회개·부흥","desc":"성령 임재와 통회 자복을 통한 심령의 대각성 및 성화 체험","page":"72, 86, 110"},{"id":"kw_women_empowerment","label":"여성 주체화","desc":"가부장적 침묵을 깨고 한글 해독, 공적 발화 및 설교 권위를 획득","page":"62, 70, 83, 106"},{"id":"kw_leader_reproduction","label":"지도자 재생산","desc":"수강자가 곧 다음 사경회의 강사 및 속장·권사로 성장하는 순환 고리","page":"58, 70, 82, 108"},{"id":"kw_schooling","label":"학제화·제도화","desc":"단기 집회에서 학년제, 시험, 수료증, 상설 성서학원으로의 진화","page":"62, 74, 90, 121"},{"id":"kw_indigenization","label":"토착화","desc":"외래 교회의 제도를 조선의 계·사랑방·품앗이 공동체 문화와 유기적 접합","page":"61, 68, 74, 76"},{"id":"kw_wesleyan_tradition","label":"웨슬리 전통","desc":"속회 중심 소그룹, 만인제사장직, 실천적 성화론의 역사적 계승","page":"22, 60, 66"},{"id":"kw_social_ethics","label":"사회윤리·계몽","desc":"위생학, 육아법, 금주·단연 절제운동, 조혼 타파 등 사회 개혁 실천","page":"66, 78, 94, 119"},{"id":"kw_colonial_public","label":"식민지 공론장·자치","desc":"식민 지배하에서 민중이 집단적 지성과 자치 연대를 실험한 합법적 공간","page":"62, 67, 68, 79"},{"id":"kw_hierarchy_critique","label":"위계·훈육 비판","desc":"선교사-현지인, 남성-여성의 위계적 통제와 이에 대한 민중의 공간 전유","page":"62, 78"}];
+  const relationsData = [{"id":"pp_1","category":"① 인물↔인물","itemA":"최병헌","itemB":"아펜젤러","description":"방문·한문 성경 탐구·세례(1888~1893)","page":"57"},{"id":"pp_2","category":"① 인물↔인물","itemA":"M.F. 스크랜턴","itemB":"수원 파견 전도부인","description":"관리·파송(수원 순회)","page":"86-87"},{"id":"pp_3","category":"① 인물↔인물","itemA":"M.F. 스크랜턴","itemB":"초기 남성 신자들","description":"남성 신자들의 청원으로 부인 성경반 개설","page":"106"},{"id":"pp_4","category":"① 인물↔인물","itemA":"정인과","itemB":"오긍선","description":"승동 대사경회 공동 강사","page":"58, 62"},{"id":"pp_5","category":"① 인물↔인물","itemA":"윤성렬","itemB":"홍병선","description":"수원 남사경회 공동 강사","page":"87-88"},{"id":"pp_6","category":"① 인물↔인물","itemA":"곽안련","itemB":"민노아","description":"청주 사경회 공동 강사","page":"90"},{"id":"pp_7","category":"① 인물↔인물","itemA":"곽안련","itemB":"부해리","description":"청주 사경회 공동 강사","page":"90"},{"id":"pp_8","category":"① 인물↔인물","itemA":"민노아","itemB":"부해리","description":"청주 사경회 공동 강사","page":"90"},{"id":"pp_9","category":"① 인물↔인물","itemA":"M. 베스트","itemB":"한국인 여성 교사 13인","description":"여성 교사 13인에게 하위 3개 등급반 위임","page":"70"},{"id":"pp_10","category":"① 인물↔인물","itemA":"체이스","itemB":"제인 사무엘","description":"선천 여성 사경회 담당 계승(1901→1906)","page":"75"},{"id":"pp_11","category":"① 인물↔인물","itemA":"김세지","itemB":"W.J.·R.S. 홀","description":"홀의 평양 사역을 통한 기독교 접촉","page":"41"},{"id":"pp_12","category":"① 인물↔인물","itemA":"하리슨","itemB":"전라 조사 4인","description":"평신도 출신 조사 임명","page":"120"},{"id":"pp_13","category":"① 인물↔인물","itemA":"정 씨 부인","itemB":"전라 조사 4인","description":"전라 성경공부반 협력 인도","page":"120"},{"id":"pp_14","category":"① 인물↔인물","itemA":"스왈런","itemB":"맥큔","description":"등록 증언을 맥큔이 보고서에 기록","page":"71"},{"id":"pr_1","category":"② 인물↔지역","itemA":"헤론 부인","itemB":"서울(경성)","description":"활동·참여 지역","page":"59-60"},{"id":"pr_2","category":"② 인물↔지역","itemA":"M.F. 스크랜턴","itemB":"서울(경성)","description":"활동·참여 지역","page":"61, 105"},{"id":"pr_3","category":"② 인물↔지역","itemA":"M.F. 스크랜턴","itemB":"수원·경기","description":"활동·참여 지역","page":"86-87"},{"id":"pr_4","category":"② 인물↔지역","itemA":"아펜젤러","itemB":"서울(경성)","description":"활동·참여 지역","page":"56, 61"},{"id":"pr_5","category":"② 인물↔지역","itemA":"최병헌","itemB":"서울(경성)","description":"활동·참여 지역","page":"57, 59"},{"id":"pr_6","category":"② 인물↔지역","itemA":"정인과","itemB":"서울(경성)","description":"활동·참여 지역","page":"58, 62"},{"id":"pr_7","category":"② 인물↔지역","itemA":"오긍선","itemB":"서울(경성)","description":"활동·참여 지역","page":"58, 62"},{"id":"pr_8","category":"② 인물↔지역","itemA":"노블 부인","itemB":"서울(경성)","description":"활동·참여 지역","page":"119"},{"id":"pr_9","category":"② 인물↔지역","itemA":"초기 남성 신자들","itemB":"서울(경성)","description":"활동·참여 지역","page":"106"},{"id":"pr_10","category":"② 인물↔지역","itemA":"G.H. 존스 부부","itemB":"인천·제물포","description":"활동·참여 지역","page":"64-66"},{"id":"pr_11","category":"② 인물↔지역","itemA":"G.H. 존스 부부","itemB":"강화","description":"활동·참여 지역","page":"64-65"},{"id":"pr_12","category":"② 인물↔지역","itemA":"제물포 평신도 남성","itemB":"인천·제물포","description":"활동·참여 지역","page":"65, 120"},{"id":"pr_13","category":"② 인물↔지역","itemA":"강화 평신도 지도자","itemB":"강화","description":"활동·참여 지역","page":"64-66"},{"id":"pr_14","category":"② 인물↔지역","itemA":"강화 평신도 지도자","itemB":"서울(경성)","description":"활동·참여 지역","page":"64-65"},{"id":"pr_15","category":"② 인물↔지역","itemA":"마펫","itemB":"평양","description":"활동·참여 지역","page":"69, 72, 117"},{"id":"pr_16","category":"② 인물↔지역","itemA":"스왈런","itemB":"평양","description":"활동·참여 지역","page":"71, 117"},{"id":"pr_17","category":"② 인물↔지역","itemA":"맥큔","itemB":"평양","description":"활동·참여 지역","page":"71"},{"id":"pr_18","category":"② 인물↔지역","itemA":"J.Z. 무어","itemB":"평양","description":"활동·참여 지역","page":"71"},{"id":"pr_19","category":"② 인물↔지역","itemA":"M. 베스트","itemB":"평양","description":"활동·참여 지역","page":"70"},{"id":"pr_20","category":"② 인물↔지역","itemA":"한국인 여성 교사 13인","itemB":"평양","description":"활동·참여 지역","page":"70"},{"id":"pr_21","category":"② 인물↔지역","itemA":"한례전·양씨","itemB":"평양","description":"활동·참여 지역","page":"72"},{"id":"pr_22","category":"② 인물↔지역","itemA":"김세지","itemB":"평양","description":"활동·참여 지역","page":"41"},{"id":"pr_23","category":"② 인물↔지역","itemA":"W.J.·R.S. 홀","itemB":"평양","description":"활동·참여 지역","page":"41, 73"},{"id":"pr_24","category":"② 인물↔지역","itemA":"김선두 목사","itemB":"선천","description":"활동·참여 지역","page":"75, 78"},{"id":"pr_25","category":"② 인물↔지역","itemA":"김선두 목사","itemB":"평양","description":"활동·참여 지역","page":"75"},{"id":"pr_26","category":"② 인물↔지역","itemA":"김선두 목사","itemB":"해주·황해","description":"활동·참여 지역","page":"81"},{"id":"pr_27","category":"② 인물↔지역","itemA":"체이스","itemB":"선천","description":"활동·참여 지역","page":"75"},{"id":"pr_28","category":"② 인물↔지역","itemA":"제인 사무엘","itemB":"선천","description":"활동·참여 지역","page":"75"},{"id":"pr_29","category":"② 인물↔지역","itemA":"키언스(컨스)","itemB":"선천","description":"활동·참여 지역","page":"75-76, 106"},{"id":"pr_30","category":"② 인물↔지역","itemA":"누 씨(Nu Ssi)","itemB":"선천","description":"활동·참여 지역","page":"107"},{"id":"pr_31","category":"② 인물↔지역","itemA":"샤프","itemB":"해주·황해","description":"활동·참여 지역","page":"80, 82-83"},{"id":"pr_32","category":"② 인물↔지역","itemA":"스네이블리","itemB":"해주·황해","description":"활동·참여 지역","page":"80, 108-109"},{"id":"pr_33","category":"② 인물↔지역","itemA":"재령 전도부인","itemB":"해주·황해","description":"활동·참여 지역","page":"41"},{"id":"pr_34","category":"② 인물↔지역","itemA":"버딕","itemB":"수원·경기","description":"활동·참여 지역","page":"85-88"},{"id":"pr_35","category":"② 인물↔지역","itemA":"수원 파견 전도부인","itemB":"수원·경기","description":"활동·참여 지역","page":"86-87"},{"id":"pr_36","category":"② 인물↔지역","itemA":"윤성렬","itemB":"수원·경기","description":"활동·참여 지역","page":"87"},{"id":"pr_37","category":"② 인물↔지역","itemA":"홍병선","itemB":"수원·경기","description":"활동·참여 지역","page":"87-88"},{"id":"pr_38","category":"② 인물↔지역","itemA":"곽안련","itemB":"청주","description":"활동·참여 지역","page":"90"},{"id":"pr_39","category":"② 인물↔지역","itemA":"민노아","itemB":"청주","description":"활동·참여 지역","page":"89-90"},{"id":"pr_40","category":"② 인물↔지역","itemA":"부해리","itemB":"청주","description":"활동·참여 지역","page":"90"},{"id":"pr_41","category":"② 인물↔지역","itemA":"S.D. 밀러","itemB":"청주","description":"활동·참여 지역","page":"89"},{"id":"pr_42","category":"② 인물↔지역","itemA":"하디","itemB":"원산","description":"활동·참여 지역","page":"110-111"},{"id":"pr_43","category":"② 인물↔지역","itemA":"하디","itemB":"평양","description":"활동·참여 지역","page":"111"},{"id":"pr_44","category":"② 인물↔지역","itemA":"하디","itemB":"서울(경성)","description":"활동·참여 지역","page":"111"},{"id":"pr_45","category":"② 인물↔지역","itemA":"하디","itemB":"선천","description":"활동·참여 지역","page":"111"},{"id":"pr_46","category":"② 인물↔지역","itemA":"매티 테이트","itemB":"전라","description":"활동·참여 지역","page":"118"},{"id":"pr_47","category":"② 인물↔지역","itemA":"하리슨","itemB":"전라","description":"활동·참여 지역","page":"120"},{"id":"pr_48","category":"② 인물↔지역","itemA":"전라 조사 4인","itemB":"전라","description":"활동·참여 지역","page":"120"},{"id":"pr_49","category":"② 인물↔지역","itemA":"정 씨 부인","itemB":"전라","description":"활동·참여 지역","page":"120"},{"id":"pc_1","category":"③ 인물↔교과","itemA":"헤론 부인","itemB":"바느질+성경 읽기","description":"토요 모임 조직","page":"59-60"},{"id":"pc_2","category":"③ 인물↔교과","itemA":"M.F. 스크랜턴","itemB":"암송·찬송·요리문답","description":"부인 성경반 운영","page":"61"},{"id":"pc_3","category":"③ 인물↔교과","itemA":"초기 남성 신자들","itemB":"암송·찬송·요리문답","description":"개설 청원","page":"106"},{"id":"pc_4","category":"③ 인물↔교과","itemA":"아펜젤러","itemB":"성경 독해+웨슬리 문답","description":"배재학당 남성반 주도","page":"61"},{"id":"pc_5","category":"③ 인물↔교과","itemA":"노블 부인","itemB":"주일학교 교사 훈련반","description":"훈련반 개설(1916)","page":"119"},{"id":"pc_6","category":"③ 인물↔교과","itemA":"정인과","itemB":"경성 대사경회 교과","description":"강사","page":"58, 62"},{"id":"pc_7","category":"③ 인물↔교과","itemA":"오긍선","itemB":"경성 대사경회 교과","description":"강사","page":"58, 62"},{"id":"pc_8","category":"③ 인물↔교과","itemA":"G.H. 존스 부부","itemB":"복음서·암송·찬송+사회윤리","description":"내리교회 정기 성경반","page":"66"},{"id":"pc_9","category":"③ 인물↔교과","itemA":"강화 평신도 지도자","itemB":"순회 목회 커리큘럼","description":"10개 교회 순회 교과로 치환","page":"66"},{"id":"pc_10","category":"③ 인물↔교과","itemA":"마펫","itemB":"부흥기 일과·간증","description":"평일반 현장 기록","page":"72"},{"id":"pc_11","category":"③ 인물↔교과","itemA":"스왈런","itemB":"부흥기 일과·간증","description":"사경회 등록·훈련 이념","page":"71, 117"},{"id":"pc_12","category":"③ 인물↔교과","itemA":"맥큔","itemB":"부흥기 일과·간증","description":"보고서 기록","page":"71"},{"id":"pc_13","category":"③ 인물↔교과","itemA":"J.Z. 무어","itemB":"부흥기 일과·간증","description":"일정표 기록","page":"71"},{"id":"pc_14","category":"③ 인물↔교과","itemA":"W.J.·R.S. 홀","itemB":"3단계 교과·원문 연구","description":"의료·교육 거점 마련","page":"73"},{"id":"pc_15","category":"③ 인물↔교과","itemA":"M. 베스트","itemB":"3단계 교과·원문 연구","description":"하위 등급반 보고","page":"70"},{"id":"pc_16","category":"③ 인물↔교과","itemA":"한국인 여성 교사 13인","itemB":"3단계 교과·원문 연구","description":"하위 3개 등급 전담","page":"70"},{"id":"pc_17","category":"③ 인물↔교과","itemA":"제인 사무엘","itemB":"7등급 분반+위생·가정","description":"16개 클래스 운영","page":"75"},{"id":"pc_18","category":"③ 인물↔교과","itemA":"키언스(컨스)","itemB":"7등급 분반+위생·가정","description":"분반·위생 교과 보고","page":"77-78, 106-107"},{"id":"pc_19","category":"③ 인물↔교과","itemA":"누 씨(Nu Ssi)","itemB":"7등급 분반+위생·가정","description":"선천 사경회 단기 수강","page":"107"},{"id":"pc_20","category":"③ 인물↔교과","itemA":"샤프","itemB":"3단계 사경회·성경 집중","description":"지방 사경회·성경 집중 원칙","page":"82-83"},{"id":"pc_21","category":"③ 인물↔교과","itemA":"스네이블리","itemB":"여성 지도력 교과","description":"순번 경건회 인도 보고","page":"108-109"},{"id":"pc_22","category":"③ 인물↔교과","itemA":"버딕","itemB":"교리·축호전도·부흥 강연","description":"1928 수원 사경회 보고","page":"88"},{"id":"pc_23","category":"③ 인물↔교과","itemA":"윤성렬","itemB":"교리·축호전도·부흥 강연","description":"교수 강사","page":"87-88"},{"id":"pc_24","category":"③ 인물↔교과","itemA":"홍병선","itemB":"교리·축호전도·부흥 강연","description":"부흥 강연","page":"88"},{"id":"pc_25","category":"③ 인물↔교과","itemA":"수원 파견 전도부인","itemB":"입문 교재 교과","description":"번역 교재로 교리 암기·교수","page":"88"},{"id":"pc_26","category":"③ 인물↔교과","itemA":"민노아","itemB":"입학시험·3등급(청주)","description":"보고·강사","page":"89-90"},{"id":"pc_27","category":"③ 인물↔교과","itemA":"S.D. 밀러","itemB":"입학시험·3등급(청주)","description":"1910 여성 겨울 사경회 보고","page":"89"},{"id":"pc_28","category":"③ 인물↔교과","itemA":"곽안련","itemB":"입학시험·3등급(청주)","description":"강사","page":"90"},{"id":"pc_29","category":"③ 인물↔교과","itemA":"부해리","itemB":"입학시험·3등급(청주)","description":"강사","page":"90"},{"id":"pc_30","category":"③ 인물↔교과","itemA":"하디","itemB":"공개적 죄 고백","description":"공개 고백","page":"110-111"},{"id":"pc_31","category":"③ 인물↔교과","itemA":"매티 테이트","itemB":"순회 여성 성경반","description":"순회 성경반 개척","page":"118"},{"id":"pc_32","category":"③ 인물↔교과","itemA":"하리슨","itemB":"순회 여성 성경반","description":"조사 임명 보고","page":"120"},{"id":"pc_33","category":"③ 인물↔교과","itemA":"전라 조사 4인","itemB":"순회 여성 성경반","description":"성경공부반 순회 인도","page":"120"},{"id":"pc_34","category":"③ 인물↔교과","itemA":"정 씨 부인","itemB":"순회 여성 성경반","description":"성경공부반 인도","page":"120"},{"id":"ck_1","category":"④ 교과↔핵심어","itemA":"바느질+성경 읽기","itemB":"여성 주체화","description":"교과 성격","page":"59-61"},{"id":"ck_2","category":"④ 교과↔핵심어","itemA":"바느질+성경 읽기","itemB":"토착화","description":"교과 성격","page":"60-62"},{"id":"ck_3","category":"④ 교과↔핵심어","itemA":"암송·찬송·요리문답","itemB":"성경 본문 중심성","description":"교과 성격","page":"61"},{"id":"ck_4","category":"④ 교과↔핵심어","itemA":"암송·찬송·요리문답","itemB":"수용자 맞춤·등급제","description":"교과 성격","page":"61"},{"id":"ck_5","category":"④ 교과↔핵심어","itemA":"성경 독해+웨슬리 문답","itemB":"성경 본문 중심성","description":"교과 성격","page":"61"},{"id":"ck_6","category":"④ 교과↔핵심어","itemA":"성경 독해+웨슬리 문답","itemB":"토착화","description":"교과 성격","page":"61"},{"id":"ck_7","category":"④ 교과↔핵심어","itemA":"사역자 훈련·신학반","itemB":"실천 지향(전도 실습)","description":"교과 성격","page":"59-60"},{"id":"ck_8","category":"④ 교과↔핵심어","itemA":"사역자 훈련·신학반","itemB":"지도자 재생산","description":"교과 성격","page":"59-60"},{"id":"ck_9","category":"④ 교과↔핵심어","itemA":"사역자 훈련·신학반","itemB":"웨슬리 전통","description":"교과 성격","page":"60"},{"id":"ck_10","category":"④ 교과↔핵심어","itemA":"경성 대사경회 교과","itemB":"학제화·제도화","description":"교과 성격","page":"62"},{"id":"ck_11","category":"④ 교과↔핵심어","itemA":"경성 대사경회 교과","itemB":"위계·훈육 비판","description":"교과 성격","page":"62"},{"id":"ck_12","category":"④ 교과↔핵심어","itemA":"경성 대사경회 교과","itemB":"여성 주체화","description":"교과 성격","page":"62-63"},{"id":"ck_13","category":"④ 교과↔핵심어","itemA":"경성 대사경회 교과","itemB":"웨슬리 전통","description":"교과 성격","page":"62"},{"id":"ck_14","category":"④ 교과↔핵심어","itemA":"주일학교 교사 훈련반","itemB":"학제화·제도화","description":"교과 성격","page":"119"},{"id":"ck_15","category":"④ 교과↔핵심어","itemA":"주일학교 교사 훈련반","itemB":"지도자 재생산","description":"교과 성격","page":"119"},{"id":"ck_16","category":"④ 교과↔핵심어","itemA":"남대문 부녀자 성경반","itemB":"사회윤리·계몽","description":"교과 성격","page":"119-120"},{"id":"ck_17","category":"④ 교과↔핵심어","itemA":"남대문 부녀자 성경반","itemB":"여성 주체화","description":"교과 성격","page":"119-120"},{"id":"ck_18","category":"④ 교과↔핵심어","itemA":"복음서·암송·찬송+사회윤리","itemB":"사회윤리·계몽","description":"교과 성격","page":"66"},{"id":"ck_19","category":"④ 교과↔핵심어","itemA":"복음서·암송·찬송+사회윤리","itemB":"성경 본문 중심성","description":"교과 성격","page":"66"},{"id":"ck_20","category":"④ 교과↔핵심어","itemA":"복음서·암송·찬송+사회윤리","itemB":"식민지 공론장·자치","description":"교과 성격","page":"67-68"},{"id":"ck_21","category":"④ 교과↔핵심어","itemA":"사범 방식(암기→복창)","itemB":"지도자 재생산","description":"교과 성격","page":"66"},{"id":"ck_22","category":"④ 교과↔핵심어","itemA":"사범 방식(암기→복창)","itemB":"웨슬리 전통","description":"교과 성격","page":"66"},{"id":"ck_23","category":"④ 교과↔핵심어","itemA":"사범 방식(암기→복창)","itemB":"성경 본문 중심성","description":"교과 성격","page":"66"},{"id":"ck_24","category":"④ 교과↔핵심어","itemA":"인천 대사경회 학년제","itemB":"학제화·제도화","description":"교과 성격","page":"121-122"},{"id":"ck_25","category":"④ 교과↔핵심어","itemA":"인천 대사경회 학년제","itemB":"수용자 맞춤·등급제","description":"교과 성격","page":"122"},{"id":"ck_26","category":"④ 교과↔핵심어","itemA":"14일 장기 합숙","itemB":"식민지 공론장·자치","description":"교과 성격","page":"68"},{"id":"ck_27","category":"④ 교과↔핵심어","itemA":"14일 장기 합숙","itemB":"토착화","description":"교과 성격","page":"68"},{"id":"ck_28","category":"④ 교과↔핵심어","itemA":"14일 장기 합숙","itemB":"성경 본문 중심성","description":"교과 성격","page":"66"},{"id":"ck_29","category":"④ 교과↔핵심어","itemA":"순회 목회 커리큘럼","itemB":"자전(자생 전도)","description":"교과 성격","page":"66-67"},{"id":"ck_30","category":"④ 교과↔핵심어","itemA":"순회 목회 커리큘럼","itemB":"실천 지향(전도 실습)","description":"교과 성격","page":"66"},{"id":"ck_31","category":"④ 교과↔핵심어","itemA":"3단계 교과·원문 연구","itemB":"수용자 맞춤·등급제","description":"교과 성격","page":"73"},{"id":"ck_32","category":"④ 교과↔핵심어","itemA":"3단계 교과·원문 연구","itemB":"지도자 재생산","description":"교과 성격","page":"73"},{"id":"ck_33","category":"④ 교과↔핵심어","itemA":"3단계 교과·원문 연구","itemB":"토착화","description":"교과 성격","page":"73"},{"id":"ck_34","category":"④ 교과↔핵심어","itemA":"부흥기 일과·간증","itemB":"회개·부흥","description":"교과 성격","page":"71-73"},{"id":"ck_35","category":"④ 교과↔핵심어","itemA":"부흥기 일과·간증","itemB":"실천 지향(전도 실습)","description":"교과 성격","page":"71"},{"id":"ck_36","category":"④ 교과↔핵심어","itemA":"부흥기 일과·간증","itemB":"토착화","description":"교과 성격","page":"74"},{"id":"ck_37","category":"④ 교과↔핵심어","itemA":"1921 대사경회 학년제","itemB":"학제화·제도화","description":"교과 성격","page":"74"},{"id":"ck_38","category":"④ 교과↔핵심어","itemA":"1921 대사경회 학년제","itemB":"수용자 맞춤·등급제","description":"교과 성격","page":"74"},{"id":"ck_39","category":"④ 교과↔핵심어","itemA":"7등급 분반+위생·가정","itemB":"수용자 맞춤·등급제","description":"교과 성격","page":"77"},{"id":"ck_40","category":"④ 교과↔핵심어","itemA":"7등급 분반+위생·가정","itemB":"사회윤리·계몽","description":"교과 성격","page":"78, 106-107"},{"id":"ck_41","category":"④ 교과↔핵심어","itemA":"7등급 분반+위생·가정","itemB":"위계·훈육 비판","description":"교과 성격","page":"78"},{"id":"ck_42","category":"④ 교과↔핵심어","itemA":"7등급 분반+위생·가정","itemB":"여성 주체화","description":"교과 성격","page":"106-108"},{"id":"ck_43","category":"④ 교과↔핵심어","itemA":"3단계 사경회·성경 집중","itemB":"성경 본문 중심성","description":"교과 성격","page":"83-84"},{"id":"ck_44","category":"④ 교과↔핵심어","itemA":"3단계 사경회·성경 집중","itemB":"수용자 맞춤·등급제","description":"교과 성격","page":"82-84"},{"id":"ck_45","category":"④ 교과↔핵심어","itemA":"전도부인 사범 훈련","itemB":"지도자 재생산","description":"교과 성격","page":"82-83"},{"id":"ck_46","category":"④ 교과↔핵심어","itemA":"전도부인 사범 훈련","itemB":"여성 주체화","description":"교과 성격","page":"83"},{"id":"ck_47","category":"④ 교과↔핵심어","itemA":"여성 지도력 교과","itemB":"여성 주체화","description":"교과 성격","page":"83, 109"},{"id":"ck_48","category":"④ 교과↔핵심어","itemA":"여성 지도력 교과","itemB":"지도자 재생산","description":"교과 성격","page":"109"},{"id":"ck_49","category":"④ 교과↔핵심어","itemA":"입문 교재 교과","itemB":"성경 본문 중심성","description":"교과 성격","page":"88"},{"id":"ck_50","category":"④ 교과↔핵심어","itemA":"입문 교재 교과","itemB":"실천 지향(전도 실습)","description":"교과 성격","page":"88"},{"id":"ck_51","category":"④ 교과↔핵심어","itemA":"교리·축호전도·부흥 강연","itemB":"실천 지향(전도 실습)","description":"교과 성격","page":"88-89"},{"id":"ck_52","category":"④ 교과↔핵심어","itemA":"교리·축호전도·부흥 강연","itemB":"회개·부흥","description":"교과 성격","page":"89"},{"id":"ck_53","category":"④ 교과↔핵심어","itemA":"입학시험·3등급(청주)","itemB":"수용자 맞춤·등급제","description":"교과 성격","page":"90"},{"id":"ck_54","category":"④ 교과↔핵심어","itemA":"입학시험·3등급(청주)","itemB":"학제화·제도화","description":"교과 성격","page":"90"},{"id":"ck_55","category":"④ 교과↔핵심어","itemA":"공개적 죄 고백","itemB":"회개·부흥","description":"교과 성격","page":"110-111"},{"id":"ck_56","category":"④ 교과↔핵심어","itemA":"순회 여성 성경반","itemB":"여성 주체화","description":"교과 성격","page":"118"},{"id":"ck_57","category":"④ 교과↔핵심어","itemA":"순회 여성 성경반","itemB":"자전(자생 전도)","description":"교과 성격","page":"120"},{"id":"ck_58","category":"④ 교과↔핵심어","itemA":"순회 여성 성경반","itemB":"지도자 재생산","description":"교과 성격","page":"120"},{"id":"kr_1","category":"⑤ 핵심어↔지역","itemA":"성경 본문 중심성","itemB":"강화","description":"지역적 특성","page":"66"},{"id":"kr_2","category":"⑤ 핵심어↔지역","itemA":"성경 본문 중심성","itemB":"해주·황해","description":"지역적 특성","page":"83"},{"id":"kr_3","category":"⑤ 핵심어↔지역","itemA":"실천 지향(전도 실습)","itemB":"서울(경성)","description":"지역적 특성","page":"59-60"},{"id":"kr_4","category":"⑤ 핵심어↔지역","itemA":"실천 지향(전도 실습)","itemB":"평양","description":"지역적 특성","page":"71-72"},{"id":"kr_5","category":"⑤ 핵심어↔지역","itemA":"실천 지향(전도 실습)","itemB":"수원·경기","description":"지역적 특성","page":"88-89"},{"id":"kr_6","category":"⑤ 핵심어↔지역","itemA":"실천 지향(전도 실습)","itemB":"해주·황해","description":"지역적 특성","page":"81"},{"id":"kr_7","category":"⑤ 핵심어↔지역","itemA":"수용자 맞춤·등급제","itemB":"평양","description":"지역적 특성","page":"73-74"},{"id":"kr_8","category":"⑤ 핵심어↔지역","itemA":"수용자 맞춤·등급제","itemB":"선천","description":"지역적 특성","page":"77"},{"id":"kr_9","category":"⑤ 핵심어↔지역","itemA":"수용자 맞춤·등급제","itemB":"청주","description":"지역적 특성","page":"90"},{"id":"kr_10","category":"⑤ 핵심어↔지역","itemA":"수용자 맞춤·등급제","itemB":"인천·제물포","description":"지역적 특성","page":"122"},{"id":"kr_11","category":"⑤ 핵심어↔지역","itemA":"수용자 맞춤·등급제","itemB":"해주·황해","description":"지역적 특성","page":"82-83"},{"id":"kr_12","category":"⑤ 핵심어↔지역","itemA":"자립·자비량","itemB":"인천·제물포","description":"지역적 특성","page":"64, 118"},{"id":"kr_13","category":"⑤ 핵심어↔지역","itemA":"자립·자비량","itemB":"평양","description":"지역적 특성","page":"68-69"},{"id":"kr_14","category":"⑤ 핵심어↔지역","itemA":"자립·자비량","itemB":"선천","description":"지역적 특성","page":"76-77"},{"id":"kr_15","category":"⑤ 핵심어↔지역","itemA":"자전(자생 전도)","itemB":"평양","description":"지역적 특성","page":"70"},{"id":"kr_16","category":"⑤ 핵심어↔지역","itemA":"자전(자생 전도)","itemB":"선천","description":"지역적 특성","page":"76"},{"id":"kr_17","category":"⑤ 핵심어↔지역","itemA":"자전(자생 전도)","itemB":"강화","description":"지역적 특성","page":"66-67"},{"id":"kr_18","category":"⑤ 핵심어↔지역","itemA":"날 연보","itemB":"선천","description":"지역적 특성","page":"75-77"},{"id":"kr_19","category":"⑤ 핵심어↔지역","itemA":"날 연보","itemB":"평양","description":"지역적 특성","page":"113"},{"id":"kr_20","category":"⑤ 핵심어↔지역","itemA":"회개·부흥","itemB":"평양","description":"지역적 특성","page":"72, 110-111"},{"id":"kr_21","category":"⑤ 핵심어↔지역","itemA":"회개·부흥","itemB":"원산","description":"지역적 특성","page":"110-111"},{"id":"kr_22","category":"⑤ 핵심어↔지역","itemA":"회개·부흥","itemB":"수원·경기","description":"지역적 특성","page":"86"},{"id":"kr_23","category":"⑤ 핵심어↔지역","itemA":"여성 주체화","itemB":"서울(경성)","description":"지역적 특성","page":"62-63"},{"id":"kr_24","category":"⑤ 핵심어↔지역","itemA":"여성 주체화","itemB":"평양","description":"지역적 특성","page":"70, 72"},{"id":"kr_25","category":"⑤ 핵심어↔지역","itemA":"여성 주체화","itemB":"선천","description":"지역적 특성","page":"76, 106-107"},{"id":"kr_26","category":"⑤ 핵심어↔지역","itemA":"여성 주체화","itemB":"해주·황해","description":"지역적 특성","page":"83, 109"},{"id":"kr_27","category":"⑤ 핵심어↔지역","itemA":"여성 주체화","itemB":"전라","description":"지역적 특성","page":"118"},{"id":"kr_28","category":"⑤ 핵심어↔지역","itemA":"지도자 재생산","itemB":"서울(경성)","description":"지역적 특성","page":"58-59"},{"id":"kr_29","category":"⑤ 핵심어↔지역","itemA":"지도자 재생산","itemB":"해주·황해","description":"지역적 특성","page":"82-83"},{"id":"kr_30","category":"⑤ 핵심어↔지역","itemA":"지도자 재생산","itemB":"평양","description":"지역적 특성","page":"70, 119"},{"id":"kr_31","category":"⑤ 핵심어↔지역","itemA":"지도자 재생산","itemB":"인천·제물포","description":"지역적 특성","page":"66"},{"id":"kr_32","category":"⑤ 핵심어↔지역","itemA":"지도자 재생산","itemB":"수원·경기","description":"지역적 특성","page":"86-87"},{"id":"kr_33","category":"⑤ 핵심어↔지역","itemA":"학제화·제도화","itemB":"서울(경성)","description":"지역적 특성","page":"62, 121"},{"id":"kr_34","category":"⑤ 핵심어↔지역","itemA":"학제화·제도화","itemB":"평양","description":"지역적 특성","page":"74, 121"},{"id":"kr_35","category":"⑤ 핵심어↔지역","itemA":"학제화·제도화","itemB":"인천·제물포","description":"지역적 특성","page":"121-122"},{"id":"kr_36","category":"⑤ 핵심어↔지역","itemA":"학제화·제도화","itemB":"청주","description":"지역적 특성","page":"90"},{"id":"kr_37","category":"⑤ 핵심어↔지역","itemA":"토착화","itemB":"서울(경성)","description":"지역적 특성","page":"61-62"},{"id":"kr_38","category":"⑤ 핵심어↔지역","itemA":"토착화","itemB":"평양","description":"지역적 특성","page":"74"},{"id":"kr_39","category":"⑤ 핵심어↔지역","itemA":"토착화","itemB":"강화","description":"지역적 특성","page":"68"},{"id":"kr_40","category":"⑤ 핵심어↔지역","itemA":"토착화","itemB":"선천","description":"지역적 특성","page":"76-77"},{"id":"kr_41","category":"⑤ 핵심어↔지역","itemA":"웨슬리 전통","itemB":"서울(경성)","description":"지역적 특성","page":"60, 62"},{"id":"kr_42","category":"⑤ 핵심어↔지역","itemA":"웨슬리 전통","itemB":"인천·제물포","description":"지역적 특성","page":"66"},{"id":"kr_43","category":"⑤ 핵심어↔지역","itemA":"사회윤리·계몽","itemB":"인천·제물포","description":"지역적 특성","page":"66"},{"id":"kr_44","category":"⑤ 핵심어↔지역","itemA":"사회윤리·계몽","itemB":"선천","description":"지역적 특성","page":"78, 106-107"},{"id":"kr_45","category":"⑤ 핵심어↔지역","itemA":"사회윤리·계몽","itemB":"서울(경성)","description":"지역적 특성","page":"119-120"},{"id":"kr_46","category":"⑤ 핵심어↔지역","itemA":"식민지 공론장·자치","itemB":"서울(경성)","description":"지역적 특성","page":"62-63"},{"id":"kr_47","category":"⑤ 핵심어↔지역","itemA":"식민지 공론장·자치","itemB":"인천·제물포","description":"지역적 특성","page":"67-68"},{"id":"kr_48","category":"⑤ 핵심어↔지역","itemA":"식민지 공론장·자치","itemB":"강화","description":"지역적 특성","page":"68"},{"id":"kr_49","category":"⑤ 핵심어↔지역","itemA":"식민지 공론장·자치","itemB":"선천","description":"지역적 특성","page":"79"},{"id":"kr_50","category":"⑤ 핵심어↔지역","itemA":"식민지 공론장·자치","itemB":"평양","description":"지역적 특성","page":"68-69"},{"id":"kr_51","category":"⑤ 핵심어↔지역","itemA":"위계·훈육 비판","itemB":"서울(경성)","description":"지역적 특성","page":"62"},{"id":"kr_52","category":"⑤ 핵심어↔지역","itemA":"위계·훈육 비판","itemB":"선천","description":"지역적 특성","page":"78"},{"id":"ch_1","category":"⑥ 사경회↔전도부인↔성경반↔지역교회","itemA":"사경회","itemB":"전도부인","description":"사경회 수료 여성→전도부인·강사(전도부인이 다시 강사로 환류)","page":"70, 72, 82-83, 107-108"},{"id":"ch_2","category":"⑥ 사경회↔전도부인↔성경반↔지역교회","itemA":"전도부인","itemB":"성경반","description":"전도부인·수료자가 성경반을 개설·인도","page":"41, 114, 120"},{"id":"ch_3","category":"⑥ 사경회↔전도부인↔성경반↔지역교회","itemA":"성경반","itemB":"지역교회","description":"성경반·기도처가 지역교회 설립·확산으로 연결","page":"114, 120, 122"},{"id":"ch_4","category":"⑥ 사경회↔전도부인↔성경반↔지역교회","itemA":"지역교회","itemB":"사경회","description":"지역교회 단위 지역·지방 사경회로 환류","page":"82, 104"},{"id":"ch_5","category":"⑥ 사경회↔전도부인↔성경반↔지역교회","itemA":"사경회","itemB":"성경반","description":"사경회 수료 후 자발적 성경반 개설→성경학원 체제","page":"84, 114-115, 121"},{"id":"ch_6","category":"⑥ 사경회↔전도부인↔성경반↔지역교회","itemA":"전도부인","itemB":"지역교회","description":"전도부인의 가정 방문·교사 훈련이 지방 교회의 기초","page":"41, 86-87"},{"id":"ch_7","category":"⑥ 사경회↔전도부인↔성경반↔지역교회","itemA":"전도부인","itemB":"평양","description":"전도부인 사례 (김세지, 베스트 지도 여성교사 13인)","page":"41, 70, 72"},{"id":"ch_8","category":"⑥ 사경회↔전도부인↔성경반↔지역교회","itemA":"전도부인","itemB":"선천","description":"전도부인 사례 (누 씨의 강계 7개 교회 단독 순회 인도)","page":"107"},{"id":"ch_9","category":"⑥ 사경회↔전도부인↔성경반↔지역교회","itemA":"전도부인","itemB":"해주·황해","description":"전도부인 사례 (재령 전도부인, 1930 해주 사범훈련)","page":"41, 82-83"},{"id":"ch_10","category":"⑥ 사경회↔전도부인↔성경반↔지역교회","itemA":"전도부인","itemB":"수원·경기","description":"전도부인 사례 (스크랜턴 지도 전도부인 순회)","page":"86-87"},{"id":"ch_11","category":"⑥ 사경회↔전도부인↔성경반↔지역교회","itemA":"전도부인","itemB":"전라","description":"전도부인 사례 (정 씨 부인의 헌신적 성경반 사역)","page":"120"},{"id":"ch_12","category":"⑥ 사경회↔전도부인↔성경반↔지역교회","itemA":"성경반","itemB":"서울(경성)","description":"성경반(성경학원) 사례 (스크랜턴 성경반, 피어선·협성)","page":"61, 119-121"},{"id":"ch_13","category":"⑥ 사경회↔전도부인↔성경반↔지역교회","itemA":"성경반","itemB":"인천·제물포","description":"성경반(성경학원) 사례 (내리교회 정기 성경반, 교사 훈련소)","page":"66, 120"},{"id":"ch_14","category":"⑥ 사경회↔전도부인↔성경반↔지역교회","itemA":"성경반","itemB":"평양","description":"성경반(성경학원) 사례 (평양여자성서학원, 평양신학교)","page":"118-119, 121"},{"id":"ch_15","category":"⑥ 사경회↔전도부인↔성경반↔지역교회","itemA":"성경반","itemB":"해주·황해","description":"성경반(성경학원) 사례 (가정 성경 연구, 자발적 성경반)","page":"41, 84"},{"id":"ch_16","category":"⑥ 사경회↔전도부인↔성경반↔지역교회","itemA":"성경반","itemB":"전라","description":"성경반(성경학원) 사례 (광주 주일 성경공부반 45개, 성경학원)","page":"118, 120, 122"},{"id":"ch_17","category":"⑥ 사경회↔전도부인↔성경반↔지역교회","itemA":"성경반","itemB":"원산","description":"성경반(성경학원) 사례 (보혜여자성서학원 1906)","page":"119"}];
+  const chainsData = [{"region":"서울(경성)","sakyunghoe":{"title":"서울 부인·사역자 사경회 (1890s~1926)","description":"1890년대 초 헤론 부인 모임 → 1899 사역자 훈련반 21명 합숙 → 1924~26 경성 대사경회(승동·종교교회 600~700명)","page":"57-62"},"bibleWomenAndLeaders":{"title":"사역자 훈련반 21명 & 여성 지식인 리더십","description":"사료상 전도부인 개별 명시 대신 조사·권서인 21명 합숙 훈련[58-59], 신흥우·김한영 등 엘리트 지식인 배출[119]","page":"58-59, 119"},"bibleClassAndInstitute":{"title":"스크랜턴 성경반 & 협성여자신학교·피어선학원","description":"스크랜턴 부인 성경반[61, 105-106], 협성여자신학교(17개 정규과목)·피어선기념성경학원(신구약·교리·교회사)[121], 남대문 부녀자 성경반[119-120]","page":"61, 105, 119-121"},"localChurch":{"title":"승동·종교교회 & 남대문 병원교회","description":"대사경회 개최 장소이자 초교파 여성 연대 중심지[58, 60], 남대문 병원교회 중심 의료-신앙 접합[119]","page":"58, 60, 119"},"refluxNote":"서울 중심의 고도화된 신학 교육과 사역자 양성은 다시 전국 각지 구역 사경회의 주강사 및 순회 교사로 파송되어 전국적 환류망을 형성함"},{"region":"인천·강화","sakyunghoe":{"title":"인천 내리교회 대사경회 & 강화 14일 사경회","description":"1925 내리교회 200여 명(새신자 77명 결신) / 강화읍내교회 14일(2주일) 장기 합숙 사경회","page":"65-68, 121-122"},"bibleWomenAndLeaders":{"title":"강화 평신도 지도자 & 제물포 평신도 남성","description":"강화 지도자: 서울 사경회 수료 후 10개 교회 순회(교인 40→130명)[65-66] / 제물포 남성: 마가복음 60권 자비 배포, 130명 결신·30명 즉시 등록[65, 120]","page":"65-66, 120"},"bibleClassAndInstitute":{"title":"내리교회 정기 성경반 & 제물포 교사 훈련소","description":"1892년부터 내리교회 정기 성경반 가동[66], 제물포 교사 훈련소(구역 50명, 시내 50명 평신도 지도자 고강도 재교육)[120]","page":"66, 120"},"localChurch":{"title":"인천 내리교회 & 강화 30여 개 자생 교회","description":"1895년 태동 후 15년 만에 강화도 내 30여 개 교회 자생 조직[63, 66], 홍승하의 8개 교회 500여 명 자립 목양[45]","page":"45, 63, 66"},"refluxNote":"강화도의 섬이라는 고립성을 14일간의 장기 신학 몰입으로 승화시켜, 평신도들이 육지의 도움 없이도 스스로 교회를 치리하는 자생적 생태계 완성"},{"region":"평양","sakyunghoe":{"title":"평양 대사경회 (1897~1921)","description":"1897 겨울반 50명+ → 1907 부흥기 1,000~2,000명 운집 → 1921 남산현교회 7일간 500~700명 제1~4학년 분반","page":"69-72, 74"},"bibleWomenAndLeaders":{"title":"한국인 여성 교사 13인 & 한례전·양씨 & 김세지","description":"여성 교사 13인이 500명 초신자 반 전담 교수[70], 강서군 학동교회 부인사경회를 주도한 한례전·양씨[72], 전도부인 김세지(Sadie Kim)[41]","page":"41, 70, 72"},"bibleClassAndInstitute":{"title":"평양 여자성서학원(1915) & 평양신학교","description":"자생 명칭 ‘성경공부(Sungkyung Kong Pu)’[118], 평양 여자성서학원[119], 여자고등성경학원 및 평양신학교 학제화[121]","page":"118-119, 121"},"localChurch":{"title":"장대현교회 & 남산현교회 & 강서군 학동교회","description":"1907 대부흥의 진원지 장대현교회[69, 72], 감리교 남산현교회[69], 평신도 여성이 직접 개척·부흥시킨 강서군 학동교회[72]","page":"69, 72"},"refluxNote":"평양 사경회에서 훈련된 여성들이 하급반 교사로 직결 투입되고, 수료생들이 시골 촌락으로 돌아가 교회 개척과 주일학교를 이끄는 만인제사장적 순환"},{"region":"선천","sakyunghoe":{"title":"선천 여성 사경회 & 1925 남북교회 연합 사경회","description":"1901 시작 → 1906년 16개 반 2,602명 등록(전례 없는 규모) / 1925년 선천읍 남·북 2개 교회 연합 10일 사경회","page":"75-76, 78"},"bibleWomenAndLeaders":{"title":"‘누 씨(Nu Ssi)’ & 날 연보 평신도 전도단","description":"누 씨: 단기 훈련 후 홀로 험산 넘어 강계 7개 교회 사경회 인도[107] / 평신도 남성들이 단 몇 분 만에 625일 전도일을 작정[75-76]","page":"75-76, 107"},"bibleClassAndInstitute":{"title":"7등급 분반 체계 & 성서학원 연계","description":"학습 수준에 따른 7등급 분반, 가정 화목·신체 위생·영아 돌봄 등 실생활 교과 편성[77-78]","page":"77-78"},"localChurch":{"title":"선천 남·북교회 & 강계 구역 7개 교회","description":"선천읍 남·북교회[75, 78], 누 씨가 독자적으로 성경을 가르치고 세운 강계 7개 교회 네트워크[107]","page":"75, 78, 107"},"refluxNote":"자비량 날 연보로 축적된 전도 노동력이 산간벽지 농촌 사경회로 파견되어, 외부 자금 없이 교회를 증식시키는 자전(Self-propagation)의 절정"},{"region":"해주·황해","sakyunghoe":{"title":"도·지방·지역 사경회 3단계 & 1925 대사경회","description":"중앙집중형 탈피 3단계 분권 사경회 체계[82], 1925년 해주읍교회 700~800명 운집(김선두 목사 초빙, 새신자 60여 명 작정)[80-81]","page":"80-82, 108-109"},"bibleWomenAndLeaders":{"title":"해주 전도부인 사범 훈련 & 재령 전도부인","description":"1930 해주 전도부인 사범 훈련(오전 이론, 오후 설교 시연)[82-83], 재령병원 전도부인의 토요 교사 훈련반[41]","page":"41, 82-83"},"bibleClassAndInstitute":{"title":"자발적 성경반 개설 & 통신 성경 연구","description":"사경회 수료 후 평신도 자발적 성경반 수십 곳 개설[84], 가정 성경 연구(요한복음 5회 통독 서면 제출)[101]","page":"41, 84, 101"},"localChurch":{"title":"해주읍교회 & 농촌 지방·지역 거점 교회","description":"해주읍교회[80-81], 선교사가 자주 찾지 못해도 평신도 속장과 조사가 자율 운영하는 농촌 단위 교회들[82]","page":"80-82"},"refluxNote":"도사경회(중앙) → 지방사경회(구역) → 지교회사경회로 지식이 흘러내려가고, 농촌 평신도가 다시 중앙으로 와 강사 역량을 얻어 복귀하는 분권적 환류"},{"region":"수원·경기","sakyunghoe":{"title":"1895 순회 사역 → 1907 부흥 → 1928 남사경회","description":"1895 스크랜턴 순회 구역 → 1907 부흥기 34개 교회 평신도망 → 1928 수원읍 예배당 남사경회 8일간(생도 115명)","page":"85-89"},"bibleWomenAndLeaders":{"title":"스크랜턴 파견 전도부인 & 평신도 속장망","description":"스크랜턴 지도 전도부인의 가정 방문 및 여학교 개설[86-87], 34개 교회를 실질 운영한 평신도 속장·본처전도사[86]","page":"86-87"},"bibleClassAndInstitute":{"title":"사범 훈련(Normal Class) & 기독교 학교","description":"수원·음죽 장호원 사범 훈련(수강생 시연 상호 교수)[100], 100명 이상 학생이 재학한 기독교 학교 병행[86]","page":"86, 100"},"localChurch":{"title":"수원읍교회 & 수원 구역 34개 교회","description":"선교사 1명의 한계를 넘어 34개 교회가 점조직처럼 자생하여 부흥의 불씨를 지탱[86]","page":"86"},"refluxNote":"주간 교리 학습 + 오후 수원 시내 정규 축호전도 + 야간 홍병선 부흥 강연의 삼중 순환 구조를 통해 일상 생활 공간을 사경회로 통합"},{"region":"청주","sakyunghoe":{"title":"1910 여성 겨울사경회 & 1920·1926 하계 사경회","description":"1910 여성 사경회 130여 명[89] / 농사력 반영 7월 하계 집중 사경회, 곽안련·민노아·부해리 등 최고 신학 강사진[89-90]","page":"89-91"},"bibleWomenAndLeaders":{"title":"안수받은 평신도 지도자(장로) & 충북 교역자","description":"사경회 한복판에서 평신도 대중이 목도하는 가운데 로해리 목사 장립식 및 평신도 지도자(장로) 안수 거행[90-91]","page":"90-91"},"bibleClassAndInstitute":{"title":"입학시험제 3개 등급반 & 충북성경학원","description":"성적에 따라 초급(한글·교리)·중급(복음서)·고급(고린도전서)으로 엄격 분반[90], 1926 충북성경학원 상설화[90]","page":"90"},"localChurch":{"title":"청주읍교회 & 충북노회 관할 교회","description":"청주읍교회[89-91], 말씀(Word)과 질서(Order)가 결합된 치리적 공론장으로 자리매김","page":"89-91"},"refluxNote":"단순 은혜 체험을 넘어 사경회 현장에서 직접 교회의 공적 지도자를 세우는 교회 정치(Ecclesiastical Polity)와 사경회의 완벽한 융합"},{"region":"전라(보조)","isSecondary":true,"sakyunghoe":{"title":"전남 노회·군산 지방 사경회 (1900s~1930s)","description":"남장로교 주도, 전주 남성 사경회 600여 명(5등급 분반) 및 여성 사경회 4등급 분반 후 서면 시험(Written exams) 강제","page":"120, 122, 137"},"bibleWomenAndLeaders":{"title":"전도부인 정 씨 부인 & 평신도 조사 4인","description":"김옥여·김윤찬·이성춘·강응칠 등 4인의 평신도 조사 순회 목회[120], 정 씨 부인(과로 소천)의 헌신적 성경반 인도[120]","page":"120"},"bibleClassAndInstitute":{"title":"테이트 순회 여성 성경반 & 광주성경학원 10년 과정","description":"매티 테이트의 순회 성경반[118], 14년 만에 1→45개로 팽창한 광주 주일 성경공부반(2,900명)[120], 광주녀자성경학원[122]","page":"118, 120, 122, 138"},"localChurch":{"title":"광주 선교부 관할 45개 교회 및 각 처 예배당","description":"평신도 조사와 전도부인이 순회하며 지탱한 광활한 호남 평야 일대의 개체 교회망[120, 122]","page":"120, 122"},"refluxNote":"10년에 걸친 방대한 신학 커리큘럼과 엄격한 서면 시험을 통해 농촌 평신도를 준(準)신학자 수준의 전도 인력으로 벼려낸 장로교식 모델"}];
+  const comparisonData = [{"category":"선교 방법론","methodist":{"title":"웨슬리안 방법론 (Wesleyan Methodology)","points":["속회(Class Meeting) 중심의 소그룹 신앙 훈련","만인 구원론에 기반한 개방적 선교 지향","사회적 성화(Social Holiness)와 복음화의 통합 추구","학교(배재·이화)와 병원(보구여관·광혜원) 병행의 전인적 접근"],"theology":"모든 사람을 향한 선재적 은총과 적극적 사회 참여"},"presbyterian":{"title":"네비어스 정책 (Nevius Methods)","points":["자전(Self-propagation)·자립(Self-support)·자치(Self-government) 3대 원칙","평신도를 교리적으로 무장시키는 내적 훈련 강조","성경 중심의 엄격한 학사 관리 시스템","외부 자금 차단 및 철저한 자립 신앙 요구"],"theology":"철저한 성경 중심주의와 신자의 자립적 책임성"},"historicalSignificance":"사경회를 바라보는 관점에서 감리교는 사회를 변혁하는 확산적 통로로, 장로교는 순결한 성경주의자를 양성하는 집중적 요새로 인식함 (논문 125–129쪽)"},{"category":"신학적 기반","methodist":{"title":"웨슬리안 아르미니우스주의","points":["선재적 은총(Prevenient Grace)과 인간 자유의지 강조","완전한 성화(Christian Perfection) 지향","성령 충만과 ‘뜨거운 마음(Heart Religion)’ 중시","뜨거운 통성기도·회개의 부흥 집회로 자연스럽게 연결"],"theology":"체험적 신앙과 성결의 삶"},"presbyterian":{"title":"칼뱅주의 개혁신학","points":["하나님의 절대 주권(Divine Sovereignty)과 예정론(Predestination)","교리적 순수성과 지식적 성경 강해(Exegesis) 중시","성경의 절대 무오성 위에 선 신학 체계","‘성경을 믿는 교회(Bible Believing Church)’ 정체성 수호"],"theology":"교리적 정통성과 하나님의 절대 주권"},"historicalSignificance":"감리교는 마음이 뜨거워지는 성령 체험과 회심의 삶을, 장로교는 한 치의 타협도 없는 성경 교리의 철저한 지적 체계화를 우선시함 (논문 126, 130쪽)"},{"category":"사경회 성격","methodist":{"title":"체험적·감성적 융합 집회","points":["낮: 성경 본문 사경(査經) / 저녁: 뜨거운 부흥회(Poo-hoong-whei)","말씀 연구(지성)와 부흥 운동(감성)의 유기적 결합","사회적 계몽과 평등주의적 확장 지향"],"theology":"지성과 영성의 통합적 각성"},"presbyterian":{"title":"지적·교리적 성경 훈련소","points":["수준별 등급 분반(Graded System)의 정밀한 운영","엄격한 서면 시험(Written Examinations) 실시","최장 10년에 걸친 장기 커리큘럼(광주성경학교 등)","불신자 개종과 개체 교회 설립이라는 단일 목표"],"theology":"정밀한 성경 주해와 영적 군사 훈련"},"historicalSignificance":"감리교 사경회가 통성기도와 부흥 강연을 유기적으로 엮어냈다면, 장로교는 신학교에 필적하는 고강도 학사 관리와 시험으로 교리적 순수성을 담보함 (논문 130, 140쪽)"},{"category":"참여자 성격","methodist":{"title":"개방적·평등주의적 참여","points":["여성·천민 등 사회적 소외 계층을 차별 없이 포용","전도부인(Bible Women) 제도화와 목회적 지도력 부여","1931년 송도 연회에서 14명 여성에게 목사 안수 허용","‘근대적 시민 양성소’로서의 민주적 회의 절차 학습"],"theology":"그리스도 안에서의 만인 평등"},"presbyterian":{"title":"공동체 내 능동적 학습자","points":["지적 수준별 등급 분반에 적극 참여","평신도의 철저한 교리적 자기 무장 강조","전도를 위한 전방위적 영적 무장 지대로 사경회 인식","엄격한 자격 검증을 거친 평신도 지도자 배출"],"theology":"자립적 직분자로서의 규율성"},"historicalSignificance":"감리교는 여성과 기층민에게 공적 발언권과 성직의 문까지 열어주는 파격을 보인 반면, 장로교는 철저한 질서와 자격 검증을 통해 굳건한 평신도 뼈대를 세움 (논문 131, 141쪽)"},{"category":"선교 지향성","methodist":{"title":"외연적 확장 지향 (Outer Horizon)","points":["복음 전파 + 사회 개혁·계몽의 이중 목표","유치원·학교·진료소·사회복지관 등 사회 변혁 연계","에큐메니컬(교파 연합) 협력에 적극적","1930년 미감리회·남감리회 통합 기독교조선감리회 독립 자치 창설"],"theology":"세상 속으로 침투하는 사회적 복음"},"presbyterian":{"title":"내집중적(內集中的) 전도 동원","points":["날 연보(日捐補)를 통한 자발적 노동 시간 헌납","영혼 구원과 개교회 설립이라는 명확한 표적","문서 선교(마가복음 단편 판매) 적극 실행","수만 권 성경 배포와 수천 일 날 연보 서원"],"theology":"타협 없는 영혼 구원과 교회 개척"},"historicalSignificance":"장로교가 9년 만에 18만 명의 신자를 얻는 무서운 직선적 전도 엔진을 가동했다면, 감리교는 교육·의료·여성 계몽 등 사회 구조 전반을 개조하는 입체적 궤적을 그림 (논문 131, 139쪽)"},{"category":"윤리 및 치리","methodist":{"title":"신학적 포용성과 유연성","points":["세상과의 단절보다 시대 변화와 문화적 적응 수용","‘신신학(New Theology)’ 조류를 일부 포용하는 개방성","사회 속 침투와 교회 외연 확장 추구","양심과 자유의지에 기반한 상대적 포용"],"theology":"변화하는 세상에 응답하는 유연한 거룩"},"presbyterian":{"title":"엄결주의(Rigorism) 기반의 엄격한 치리","points":["주일 성수·금주·금연·축첩 배격의 절대적 마지노선","회개의 열매가 없으면 즉각 수찬 정지(Suspension)","매년 교인의 약 13%가 치리를 받아 명부에서 제외","‘거룩한 소수(Holy Minority)’ 구축 지향"],"theology":"교회의 순결성을 지키는 타협 없는 치리"},"historicalSignificance":"1920년대 후반 교회 합동 논의에서 장로교 임택권 목사는 “감리교가 교회를 세속화시켰다”고 비판했고, 감리교 양주삼 목사는 “인간의 자유의지와 포용성”을 강조하여 노선의 차이를 명확히 드러냄 (논문 132, 139쪽)"}];
+  const personProfiles = {"최병헌":{"name":"최병헌","nameHanja":"崔炳憲","nameEn":"Choi Byung-hyun (Taksa)","role":"초기 평신도 지식인 · 배재학당 한문교사 · 감리교 민중목회 거목","region":"서울(경성)","keyAction":"1888년 정동 양관으로 아펜젤러를 찾아가 한문 성경을 스스로 탐구하여 1893년 세례를 받고, 배재학당 교사로서 성경 한글 번역에 자발적으로 착수함.","historicalSignificance":"서구 신학의 단순 수동적 수용자가 아니라, 조선 유학적 교양을 바탕으로 기독교 복음을 주체적으로 해독(Decode)하고 토착적 신앙 체계를 수립한 대표적 평신도 지도자.","thesisQuote":"“망국의 위기 앞에서 새로운 구국의 진리를 찾고자 했던 청년 지식인 탁사 최병헌은 1888년 정동의 양관으로 아펜젤러를 찾아가 한문 성경을 더듬어 읽기 시작하여 오랜 탐구와 수련 끝에 1893년 세례를 받았다.”","pages":"57, 59","relatedCurriculums":["바느질+성경 읽기","성경 독해+웨슬리 문답"],"relatedPersons":["아펜젤러","M.F. 스크랜턴"]},"아펜젤러":{"name":"아펜젤러","nameEn":"Henry Gerhard Appenzeller","role":"미국 북감리회 내한 개척 선교사 · 배재학당 설립자","region":"서울(경성)","keyAction":"정동을 거점으로 배재학당을 설립하고 남성 사경회를 주도하였으며, 감리교 교리문답인 『웨슬리 문답』을 조선어로 번역하여 평신도 조사들에게 전수함.","historicalSignificance":"남성 중심 사경회와 지식인 교육을 통해 초기 한국 감리교회의 평신도 사역자와 신학적 뼈대를 구축함.","thesisQuote":"“배재학당을 중심으로 한 남성 사경회는 아펜젤러의 주도 아래 전개되었다. 그는 성경 독해와 함께 감리교 교리 문답집인 웨슬리 문답의 일부를 조선어로 번역하여 사용하였으며 평신도 지식 생산의 기초가 형성되었다.”","pages":"56, 61","relatedCurriculums":["성경 독해+웨슬리 문답","사역자 훈련·신학반"],"relatedPersons":["최병헌","M.F. 스크랜턴","G.H. 존스"]},"M.F. 스크랜턴":{"name":"M.F. 스크랜턴","nameEn":"Mary Fletcher Scranton","role":"미국 북감리회 여성선교사 · 이화학당 및 보구여관 설립자","region":"서울(경성), 수원·경기","keyAction":"1880년대 후반 정동과 상동에서 여성 최초의 부인 성경반을 개설하고, 수원·경기 순회구역에 전도부인을 파송하여 순회 사역 및 여학교 운영을 총괄함.","historicalSignificance":"남성 신자들의 강력한 청원을 수용하여 봉건적 내외법을 돌파하고 조선 여성들을 위한 최초의 공적 성경 교육 장을 열어젖힘.","thesisQuote":"“선교사의 주저함을 뚫고 마침내 부인 성경반이 출범하게 되었다. 스크랜턴은 1889년 편지에서 전도부인이 없었다면 자신의 사역은 불가능했을 것이라고 고백하며 문화적 중재 능력을 높이 평가했다.”","pages":"61, 86-87, 105-106","relatedCurriculums":["암송·찬송·요리문답","입문 교재 교과"],"relatedPersons":["초기 남성 신자들","수원 파견 전도부인","아펜젤러"]},"초기 남성 신자들":{"name":"초기 남성 신자들","role":"서울 정동 초기 감리교 평신도 공동체","region":"서울(경성)","keyAction":"스크랜턴 선교사를 지속적으로 찾아가 \"우리 남성들은 도리를 배우는데 어찌하여 우리 아내들은 배워서는 안 됩니까?\"라고 항의하며 여성 사경회 개설을 관철시킴.","historicalSignificance":"유교 가부장적 사회 질서와 남존여비 규범 속에서도 복음의 평등주의적 원리를 선제적으로 수용하여 가정과 사회 변혁을 이끈 평신도들의 주체적 실천.","thesisQuote":"“초기 기독교 남성들은 스크랜턴을 찾아와 강력히 반문하며 여성 교육의 당위성을 제기했다. 선교사가 거절할 수 없을 때까지 동일한 요구를 반복 관철시켰다.”","pages":"106","relatedCurriculums":["암송·찬송·요리문답"],"relatedPersons":["M.F. 스크랜턴"]},"헤론 부인":{"name":"헤론 부인","nameEn":"Mrs. Heron","role":"초기 여성 선교사","region":"서울(경성)","keyAction":"1890년대 초 조선 여성들의 일상 노동인 바느질과 성경 읽기를 결합한 토요일 부인 모임을 창안하여 운영함.","historicalSignificance":"기층 여성들의 생존적 일상 노동을 배움의 모판으로 전용하여 성경 텍스트와 삶을 유기적으로 결합한 실천적 교수법의 시초.","thesisQuote":"“1890년대 초 서울 부인 사경회의 가장 결정적인 특징은 바느질과 성경 읽기라는 물리적 결합이다. 일상적 노동을 학습의 매개로 삼아 성경 텍스트를 삶의 자리로 끌어들였다.”","pages":"59-60","relatedCurriculums":["바느질+성경 읽기"],"relatedPersons":["M.F. 스크랜턴","최병헌"]},"노블 부인":{"name":"노블 부인","nameEn":"Mattie Wilcox Noble","role":"미국 북감리회 여성선교사","region":"서울(경성), 평양","keyAction":"1916년 자택에서 한국 최초의 영어 주일학교 교사 훈련반을 개설하고, 35년간 전국을 순회하며 수준별 학제화와 주일학교 운동을 주도함.","historicalSignificance":"신흥우, 김한영 등 20여 명의 엘리트 평신도 지식인을 배출하고 근대 교육학과 목회 실무를 융합한 체계적 사범 교육을 정착시킴.","thesisQuote":"“1916년 노블 부인의 주도로 개설된 교사 훈련반은 시카고의 전문 교육기관과 연계된 정식 시험 제도를 도입함으로써 한국 평신도 교육이 서구의 근대적 사범 교육 수준으로 격상되는 결정적 계기가 되었다.”","pages":"119","relatedCurriculums":["주일학교 교사 훈련반"],"relatedPersons":["신흥우","김한영","정인과"]},"정인과":{"name":"정인과","nameHanja":"鄭仁果","role":"신학자 · 목사 · 대사경회 주강사","region":"서울(경성)","keyAction":"1920년대 숭동교회에서 열린 경성 장감연합 부인 대사경회(매일 600~700명 운집)의 주강사로 교리와 신학을 강의함.","historicalSignificance":"초기 소규모 사랑방 모임이 도심 거대 예배당의 대중적 공론장으로 발전했을 때, 최고 수준의 신학 강해로 평신도의 교리적 무장을 이끎.","thesisQuote":"“숭동교회에서 개최된 경성 장감 연합 부인 대사경회에는 매일 600~700명에 달하는 여성 교우가 운집하였고 신학자 정인과 목사와 오긍선 박사 등 당대 최고의 지식인 그룹이 강사진으로 참여했다.”","pages":"58, 62","relatedCurriculums":["경성 대사경회 교과"],"relatedPersons":["오긍선","노블 부인"]},"오긍선":{"name":"오긍선","nameHanja":"吳兢善","role":"세브란스 의학전문학교 의학박사 · 평신도 지도자","region":"서울(경성)","keyAction":"경성 부인 대사경회에서 의학적 근대 보건 위생, 영아 돌봄 및 절제 교육을 강연함.","historicalSignificance":"기독교 신앙을 영혼 구원에 국한하지 않고 근대 과학과 공중위생, 사회 개혁과 접목한 웨슬리안 사회적 성화의 대표적 실천자.","pages":"58, 62","thesisQuote":"“사경회는 단순한 성경 강해를 넘어 기독교인의 사회적 실천을 강조하는 방향으로 외연을 확장했다.”","relatedCurriculums":["경성 대사경회 교과"],"relatedPersons":["정인과"]},"G.H. 존스 부부":{"name":"G.H. 존스 부부","nameHanja":"趙元保 (존스)","nameEn":"George Heber Jones & Margaret Jones","role":"미국 북감리회 선교사 (제물포·강화 순회구역)","region":"인천·제물포, 강화","keyAction":"1892년부터 내리교회를 거점으로 정기 성경반을 운영하고, 암기한 말씀을 속회로 돌아가 그대로 복창·교수하는 사범 방식(Normal Method)을 훈련함.","historicalSignificance":"속회 제도와 사경회를 유기적으로 결합하여, 가르침을 받은 평신도가 곧바로 다른 평신도를 가르치는 지식 재생산 체계를 창출함.","thesisQuote":"“존스 목사는 사경회 기간 동안 평신도들이 선교사에게 전수받은 성경 본문을 철저히 암기하고 이를 자신의 속회로 돌아가 그대로 복창하며 가르치는 혹독한 사범 방식의 훈련을 실시했다.”","pages":"64-66","relatedCurriculums":["복음서·암송·찬송+사회윤리","사범 방식(암기→복창)"],"relatedPersons":["강화 평신도 지도자","제물포 평신도 남성","홍승하"]},"제물포 평신도 남성":{"name":"제물포 평신도 남성","role":"무명의 평신도 문서 전도자","region":"인천·제물포","keyAction":"사경회 후 자신의 사재를 털어 마가복음 60권을 구입하여 이웃들에게 배포, 단기간에 130명의 결신자를 얻고 그중 30명을 교회에 정식 등록시킴.","historicalSignificance":"외국의 선교 자금이나 선교사의 명령 없이 평신도 스스로가 복음서를 구매하여 이웃을 전도한 자생적 문서 선교(Literature Evangelism)의 기념비적 사례.","thesisQuote":"“제물포의 한 평신도 남성은 자비로 마가복음 60권을 구입하여 이웃에게 배포하는 문서 선교를 전개했는데, 이를 통해 130명의 새로운 결신자를 얻고 30명이 즉각 교회에 등록했다.”","pages":"65, 120","relatedCurriculums":["복음서·암송·찬송+사회윤리"],"relatedPersons":["G.H. 존스 부부"]},"강화 평신도 지도자":{"name":"강화 평신도 지도자","role":"강화 구역 평신도 순회 지도자","region":"강화, 서울(경성)","keyAction":"서울 사경회에 상경 합숙 훈련을 이수한 후 강화도로 복귀하여 10개 교회를 순회 목회하고, 2~3주 만에 교인 수를 40명에서 130명으로 급증시킴.","historicalSignificance":"중앙 사경회의 영적 에너지를 도서 지역의 현장 목회로 치환하여 단일 개교회를 넘어 구역 전체의 자립적 성장을 견인한 평신도 리더십.","thesisQuote":"“서울 사경회에서 영적 훈련을 이수하고 강화로 돌아간 지도자는 자신의 관할 구역에 속한 교회들에서 강력한 겨울 부흥을 주도하여 교인 수가 단기간에 40명에서 130명으로 급증하는 결실을 일구었다.”","pages":"64-66","relatedCurriculums":["순회 목회 커리큘럼","14일 장기 합숙"],"relatedPersons":["G.H. 존스 부부","홍승하"]},"홍승하":{"name":"홍승하","nameHanja":"洪承夏","role":"강화도 본처전도사","region":"강화","keyAction":"하와이 이민지에서 신앙을 가진 후 귀국하여 선교사의 직접적 지도 없이 강화도 일대에서 스스로 8개 교회와 500여 명의 교인 공동체를 개척하고 목양함.","historicalSignificance":"서구 선교사의 하향식 기획을 뛰어넘어 평신도 스스로 자생적 교회를 세우고 치리한 한국 개신교 자립 신앙의 극치.","thesisQuote":"“홍승하 본처전도사는 선교사의 직접적 지도 없이 하와이 이민지에서 귀국한 후 강화도 일대에서 스스로 8개 교회와 500명 이상의 교인 공동체를 형성하고 목양했다.”","pages":"45","relatedCurriculums":["순회 목회 커리큘럼"],"relatedPersons":["강화 평신도 지도자","G.H. 존스 부부"]},"마펫":{"name":"마펫","nameEn":"Samuel Austin Moffett","role":"미국 북장로교 선교사 · 평양 선교 개척자","region":"평양","keyAction":"평양 도성 내 마펫 병원과 진료소 거점 사경회를 개척하고, 1897년 혹한 속 의주에서 걸어온 신자들을 모아 평양 겨울 사경회를 인도함.","historicalSignificance":"평양을 서북 지역 복음화의 심장부로 세우고, 조사와 영수 등 평신도 사역자를 집중 훈련하여 전국적 부흥의 기초를 다짐.","thesisQuote":"“마펫 병원 및 진료소 주변 컴파운드에서 시작된 평양 사경회는 서북 민중들이 스스로 예배당을 세우고 아래로부터의 신학을 태동시키는 모태가 되었다.”","pages":"69, 72, 117","relatedCurriculums":["부흥기 일과·간증"],"relatedPersons":["스왈런","맥큔","M. 베스트"]},"스왈런":{"name":"스왈런","nameEn":"William L. Swallen","role":"미국 북장로교 선교사","region":"평양","keyAction":"1907년 평양 사경회를 주도하며 조사 40여 명에게 시골 교회 운영을 전권 위임하였고, 시골 평신도를 위한 통신 성경 과정을 창안함.","historicalSignificance":"평신도 사역자들에게 재정과 치리의 자립을 독려하고 체계적인 원격 교육을 도입하여 토착적 자전 체계를 완성함.","thesisQuote":"“스왈런은 토착 사역자 양성의 핵심이 서구식 성직자 대학을 기계적으로 이식하는 데 있지 않고 혹독한 핍박 속에서도 자립·자전·자치하는 살아있는 증인을 길러내는 데 있다고 단언했다.”","pages":"71, 117","relatedCurriculums":["부흥기 일과·간증"],"relatedPersons":["마펫","맥큔","J.Z. 무어"]},"맥큔":{"name":"맥큔","nameEn":"George Shannon McCune","role":"미국 북장로교 선교사","region":"평양","keyAction":"1907년 겨울 평양 사경회에 1,000명 이상의 남성들이 300리~360리 눈길을 걸어와 운집한 광경을 상세히 기록하여 본국과 연합 매체에 보고함.","historicalSignificance":"기록이 증언하듯 사경회가 단순 교실이 아니라 민중의 영적 갈망이 폭발하는 거대한 용광로였음을 실증함.","pages":"71","thesisQuote":"“시골 각지에서 무려 1,000명 이상의 남성들이 오직 성경을 배우기 위해 평양으로 몰려들었으며 매서운 추위 속에서 수백 리를 걸어왔다.”","relatedCurriculums":["부흥기 일과·간증"],"relatedPersons":["스왈런","J.Z. 무어"]},"J.Z. 무어":{"name":"J.Z. 무어","nameEn":"John Z. Moore","role":"미국 북감리회 선교사","region":"평양","keyAction":"평양에서 두 달 동안 교인들이 말씀에 몰입한 집중 사경회 일과와 10만 일 이상의 날 연보 실행 성과를 정밀하게 집계하여 보고함.","historicalSignificance":"웨슬리의 순회 전도 야성이 한국의 사경회 수강자들의 삶 속에서 역사적으로 재현되었음을 증언함.","thesisQuote":"“무어 목사는 두 달 동안 교인들이 말 그대로 성경을 먹고 살았다고 표현할 만큼 강도 높은 훈련이 이어졌음을 기록했다.”","pages":"71, 112-113","relatedCurriculums":["부흥기 일과·간증"],"relatedPersons":["스왈런","맥큔"]},"M. 베스트":{"name":"M. 베스트","nameEn":"Margaret Best","role":"미국 북장로교 여성선교사","region":"평양","keyAction":"평양 여성 사경회(510명 참석)를 주관하고 1915년 평양여자성서학원을 설립하였으며, 한국인 여성 13명에게 하위 등급반 교수를 전적으로 위임함.","historicalSignificance":"피교육자였던 조선 여성을 지식의 전달자이자 영적 교사로 격상시켜 만인제사장적 지도자 재생산 구조를 실현함.","thesisQuote":"“베스트 선교사는 시골 여성 사경회에 모인 500여 명의 초신자들을 가르치기 위해 평양 출신 한국인 여성 13명을 교사로 세워 하위 3개 등급반을 전담시켰다.”","pages":"70, 101","relatedCurriculums":["3단계 교과·원문 연구"],"relatedPersons":["한국인 여성 교사 13인","김세지"]},"한국인 여성 교사 13인":{"name":"한국인 여성 교사 13인","role":"평양 사경회 수료 출신 토착 여성 강사진","region":"평양","keyAction":"1910년 평양 연례 여성 사경회에서 농촌에서 올라온 510명의 여성 초신자들을 위해 하위 3개 등급 분반을 전담하여 가르침.","historicalSignificance":"서양 선교사의 일방적 주입을 넘어 현지 여성이 강단에 서서 모국어로 교리와 성경을 해설하는 교육적 자립(자전)을 이룩함.","thesisQuote":"“선교 대상이었던 피지배 계층의 여성이 지식의 전달자이자 영적 지도자로 격상되었음을 의미하며 네비어스의 자전 원리가 완벽하게 실현된 사료이다.”","pages":"70, 101","relatedCurriculums":["3단계 교과·원문 연구"],"relatedPersons":["M. 베스트"]},"김세지":{"name":"김세지","nameHanja":"金世智","nameEn":"Sadie Kim","role":"감리교 대표 전도부인 · 사회운동가 · 독립운동가","region":"평양","keyAction":"1896년 노블 목사에게 세례를 받은 후 26년간 연 2,000회 이상 가정심방, 매월 염(殮) 봉사, 과부회 창설, 대한애국부인회 부재무부장으로 상해 임시정부에 군자금 2,400원 송금.","historicalSignificance":"전도부인이 단순한 신앙 전파자를 넘어 억압받던 과부들의 경제적 자립을 돕고 민족 독립운동의 주역으로 활약한 가장 빛나는 평신도 여성의 표상.","thesisQuote":"“김세지는 약 26년 동안 활발한 전도 활동과 함께 여성 조직을 창설하여 과부들의 자립과 봉사를 도모하였으며 독립운동에도 적극 참여하여 감리교 전도부인의 핵심 인물 중 한 명이다.”","pages":"41","relatedCurriculums":["3단계 교과·원문 연구"],"relatedPersons":["W.J.·R.S. 홀","M.F. 스크랜턴"]},"한례전·양씨":{"name":"한례전·양씨","role":"평안도 강서군 학동교회 평신도 여성 지도자","region":"평양 (강서)","keyAction":"1925년 학동교회 부인사경회 및 전도회를 외부 선교사 없이 자력으로 기획·인도하고 근검절용 생활 실천과 성경학원 입학을 결단시킴.","historicalSignificance":"가부장적 억압 체제하에서 기층 평신도 여성이 집회를 자율 주도하고, 단기 참석을 정규 성서학원 입학이라는 수직적 리더십 도약으로 연결함.","thesisQuote":"“가부장적 체제하에서 여성 평신도가 집회를 기획하고 인도하는 주체로 전면에 나섰다는 사실은 사경회가 신분 질서를 타파하는 해방의 공간으로 기능했음을 입증한다.”","pages":"72","relatedCurriculums":["부흥기 일과·간증"],"relatedPersons":["김세지"]},"체이스":{"name":"체이스","nameEn":"Marie Louise Chase","role":"미국 북장로교 여성선교사","region":"선천","keyAction":"1901년 선천 선교지부 개설 직후 선천 여성 사경회를 처음 조직하여 서북 농촌 여성 교육의 기틀을 닦음.","historicalSignificance":"한국의 예루살렘으로 불리게 된 선천 지역에서 여성들이 대거 성경을 배우고 사회적 주체로 각성하는 출발점을 마련함.","pages":"75","thesisQuote":"“마리 루이스 체이스 선교사에 의해 1901년부터 시작된 선천 여성 사경회는 급속히 성장하였다.”","relatedCurriculums":["7등급 분반+위생·가정"],"relatedPersons":["제인 사무엘","키언스(컨스)"]},"제인 사무엘":{"name":"제인 사무엘","nameEn":"Jane Samuel","role":"선천 여성 사경회 총괄 선교사","region":"선천","keyAction":"1906년 선천 여성 사경회에서 단 한 사람의 주도 아래 무려 16개의 사경회 클래스를 동시 운영하며 총 2,602명의 여성을 통솔함.","historicalSignificance":"한국 교회사상 최대 규모의 여성 성경 훈련 집회를 성공적으로 지휘하여 서북 기독교 여성 운동의 폭발적 팽창을 실현함.","thesisQuote":"“1906년 제인 사무엘 선교사 단 한 사람의 주도하에 무려 16개의 사경회 클래스가 동시에 운영되었고 총 2,602명의 여성들이 등록하는 전례 없는 규모를 기록했다.”","pages":"75","relatedCurriculums":["7등급 분반+위생·가정"],"relatedPersons":["체이스","누 씨(Nu Ssi)"]},"키언스(컨스)":{"name":"키언스(컨스)","nameEn":"Rev. & Mrs. C. E. Kearns","role":"선천 선교사 부부","region":"선천","keyAction":"1904년 선천 대규모 겨울 사경회에서 평신도들이 돈 대신 625일의 전도 노동 시간을 바치기로 서약한 ‘날 연보’의 역사적 탄생을 기록하여 세계 교회에 타전함.","historicalSignificance":"조선의 전통적 품앗이·두레 노동 문화가 기독교 복음 전파 헌신으로 신학적 전환을 이룬 현장을 실증적으로 포착함.","thesisQuote":"“선교사의 어떠한 강요도 없었음에도 불구하고 단 몇 분 만에 수백 명이 자발적으로 625일의 전도일을 약정하였고, 이 운동은 훗날 수천 일의 자원 전도로 이어졌다.”","pages":"75-76, 106-107","relatedCurriculums":["7등급 분반+위생·가정"],"relatedPersons":["누 씨(Nu Ssi)","제인 사무엘"]},"누 씨(Nu Ssi)":{"name":"누 씨 (Nu Ssi)","role":"선천 출신 토착 여성 순회 전도자","region":"선천, 평북 강계","keyAction":"선천 사경회에서 단 며칠간의 짧은 훈련을 받은 후, 선교사의 동행 없이 홀로 험준한 산길을 수백 리 걸어 강계 구역 7개 시골 교회의 사경회를 독자적으로 인도함.","historicalSignificance":"서양 여성 선교사가 담당하던 강사직을 현지인 여성이 온전히 대신할 수 있음을 입증하여, 선교사들의 지도권 이양과 리더십 인식을 근본적으로 바꿈.","thesisQuote":"“선교사는 ‘그토록 짧은 준비 과정을 거친 사람 한 명이 이처럼 많은 일을 해낼 수 있다면 어찌하여 여러 여성을 훈련반에 보내지 않겠는가’라며 경탄 어린 기록을 남겼다.”","pages":"107","relatedCurriculums":["7등급 분반+위생·가정"],"relatedPersons":["제인 사무엘","키언스(컨스)"]},"김선두 목사":{"name":"김선두 목사","nameHanja":"金善斗","role":"평양 출신 명설교가 · 부흥 강사","region":"평양, 선천, 해주·황해","keyAction":"평양에서 활동하며 1925년 선천 남·북교회 연합 대사경회 및 해주 대사경회(700~800명 운집)의 주강사로 특별 초빙되어 강력한 말씀 선포와 회심을 이끎.","historicalSignificance":"1907 대부흥의 본산인 평양의 실천신학적 부흥 전통을 서북 및 서해안 전초기지로 유입시키며 교단과 지역을 잇는 네트워크를 공고화함.","pages":"75, 78, 81","thesisQuote":"“평양의 실천 신학 전통을 선천과 해주에 유입시킴으로써 한반도 서북 지역 전체의 신학적 기준을 맞추고 네트워크를 끈끈하게 연결하였다.”","relatedCurriculums":["3단계 사경회·성경 집중"],"relatedPersons":["샤프","스왈런"]},"샤프":{"name":"샤프","nameEn":"Charles E. Sharp","role":"미국 북장로교 선교사 (재령·황해 구역)","region":"해주·황해","keyAction":"황해도 전역에 도·지방·지역 사경회의 3단계 분권망을 구축하고, 세속 학문이 성경 연구를 밀어내지 않도록 철저한 말씀 집중 원칙을 고수함.","historicalSignificance":"대도시 중심의 중앙 집중 교육을 탈피하여 농촌 촌락 깊숙이 파고드는 분권적 사경회 체계를 정착시킴.","thesisQuote":"“샤프 목사는 농촌 지역 교인들의 지리적 접근성을 극대화하기 위해 지방 사경회를 핵심으로 삼았으며, 성경 본문 자체에 대한 집중적 탐구를 교회의 생명으로 보았다.”","pages":"80, 82-83","relatedCurriculums":["3단계 사경회·성경 집중"],"relatedPersons":["스네이블리","재령 전도부인"]},"스네이블리":{"name":"스네이블리","nameEn":"Gertrude E. Snavely","role":"해주 여성 사경회 지도 선교사","region":"해주·황해","keyAction":"해주 여성 사경회에서 수강생들이 아침 경건회를 직접 인도하도록 제도화하고, 방대한 성경 역사를 5색으로 요약한 ‘세대주의 도표(Dispensational Chart)’를 개발 보급함.","historicalSignificance":"시각 교육 교보재를 통한 교수법 혁신과 함께, 일반 평신도 여성들에게 공적 예배 인도의 권위를 부여한 교육 공학적 성취.","thesisQuote":"“스네이블리는 수강생들이 순번을 정해 돌아가면서 아침 경건회를 직접 인도하도록 제도화하여, 여성을 지식의 수용자에서 영적 권위를 지닌 예배 인도자로 격상시켰다.”","pages":"80, 102, 108-109","relatedCurriculums":["여성 지도력 교과","전도부인 사범 훈련"],"relatedPersons":["샤프","재령 전도부인"]},"재령 전도부인":{"name":"재령 전도부인","nameEn":"Chairyung Bible Woman","role":"황해도 재령연합병원 소속 토착 전도부인","region":"해주·황해","keyAction":"자신의 육체적 질병과 고통을 극복하고 매주 토요일마다 미숙한 여성 주일학교 교사들을 집으로 불러 성경과 교수법을 직접 훈련시킴.","historicalSignificance":"단순한 복음 전달자를 넘어 지역 교회의 평신도 교사들을 길러내는 고차원적인 ‘교사들의 교사’ 역할을 수행함을 입증함.","thesisQuote":"“전도부인이 단순한 지식 전달자를 넘어 지역 교회의 평신도 교사들을 훈련시키는 고차원적인 교사들의 교사 역할을 수행했음을 입증하는 사례이다.”","pages":"41","relatedCurriculums":["3단계 사경회·성경 집중","전도부인 사범 훈련"],"relatedPersons":["샤프","스네이블리"]},"버딕":{"name":"버딕","nameEn":"George M. Burdick","role":"미국 북감리회 수원 구역 순회 선교사","region":"수원·경기","keyAction":"수원 구역 내 34개 교회를 순회하며 낮 교리 공부, 오후 시내 축호전도, 밤 부흥회의 삼중 일과로 구성된 1928년 수원 남사경회를 조직하고 보고함.","historicalSignificance":"외국인 선교사 1명의 한계를 넘어 34개 교회 평신도 속장과 본처전도사들이 실질적 목회자로서 교회를 치리하는 자생적 생태계를 증언함.","thesisQuote":"“버딕 목사는 수원 지역 사역에서 타락자를 끌어안고 밤새 기도한 한국인 조력자들을 가장 가치 있는 조력자들이라고 부르며 평신도의 영적 야성을 증언했다.”","pages":"85-88","relatedCurriculums":["교리·축호전도·부흥 강연"],"relatedPersons":["윤성렬","홍병선","수원 파견 전도부인"]},"윤성렬":{"name":"윤성렬","nameHanja":"尹成烈","role":"감리교 엘리트 성직자 · 수원 사경회 교수 강사","region":"수원·경기","keyAction":"1928년 수원 남사경회에서 115명의 남성 평신도 생도들을 대상으로 정규 교리 학습을 전담 강의함.","historicalSignificance":"선교사-현지인 구조에서 한국인 지식인 성직자가 평신도 교육을 주도하는 자생적 교단 교육 체제로의 전환을 대표함.","pages":"87-88","thesisQuote":"“중앙에서 파송된 강사진 윤성렬과 홍병선이 115명의 남성 평신도를 전담 교육하는 구조로, 한국인 지식인 성직자가 평신도 교육을 주도하는 구조로 전환되었다.”","relatedCurriculums":["교리·축호전도·부흥 강연"],"relatedPersons":["홍병선","버딕"]},"홍병선":{"name":"홍병선","nameHanja":"洪秉璇","role":"농촌 운동가 · YMCA 지도자 · 사경회 부흥 강연자","region":"수원·경기","keyAction":"1928년 수원 남사경회에서 매일 야간 부흥 강연을 맡아 평신도들의 심령 각성과 사회적 실천 의지를 고취시킴.","historicalSignificance":"근대적 사회 개혁과 복음주의적 영성 운동을 결합하여 평신도들을 농촌과 지역 사회를 변혁할 역군으로 일깨움.","pages":"87-88","thesisQuote":"“야간에는 홍병선 씨의 부흥 강연이라는 세 겹의 활동이 하루 안에 맞물려 돌아갔다.”","relatedCurriculums":["교리·축호전도·부흥 강연"],"relatedPersons":["윤성렬","버딕"]},"수원 파견 전도부인":{"name":"수원 파견 전도부인","role":"감리교 순회 전도부인","region":"수원·경기","keyAction":"스크랜턴 부인의 지도 아래 수원 각 마을을 순회하며 가정 심방과 언문(한글) 교육, 여학교 운영을 전담함.","historicalSignificance":"초기 경기 남부 지역에 교회가 설립되기 전 촌락 규방을 파고들어 예배 공동체의 기초를 놓은 풀뿌리 개척자.","pages":"86-87","thesisQuote":"“스크랜턴 부인의 관리를 받는 전도부인들이 여러 방향으로 순회하며 여성들을 가르쳤고 여학교를 운영하는 활동을 전개했다.”","relatedCurriculums":["입문 교재 교과"],"relatedPersons":["M.F. 스크랜턴","버딕"]},"곽안련":{"name":"곽안련","nameHanja":"郭安連","nameEn":"Charles Allen Clark","role":"평양신학교 실천신학 교수 · 청주 사경회 강사","region":"청주, 평양","keyAction":"청주 사경회에서 실천신학과 교회 정치를 강의하였으며, 1936년 한 해 동안 전국에서 2,344개의 전일제 사경회가 열려 17만 명이 참여했음을 규명한 저술을 남김.","historicalSignificance":"사경회 제도를 한국 교회의 독보적 성장 비결(Secret)로 분석하고, 청주 사경회의 신학적 밀도를 최고 수준으로 끌어올림.","thesisQuote":"“평양신학교에서 실천신학을 가르쳤던 곽안련 목사가 청주 사경회 강단에 섰다는 것은 이 집회가 평양에 필적하는 최고 수준이었음을 실증한다.”","pages":"90, 128","relatedCurriculums":["입학시험·3등급(청주)"],"relatedPersons":["민노아","부해리"]},"민노아":{"name":"민노아","nameHanja":"閔老雅","nameEn":"Frederick S. Miller","role":"충북 청주 선교 개척자","region":"청주","keyAction":"청주 선교를 개척하고 농사력을 반영한 7월 하계 사경회를 개최하였으며, 입학시험 제도를 도입해 초·중·고급 3등급 분반을 가동함.","historicalSignificance":"충청 내륙의 농촌 환경에 최적화된 집중 신학 훈련을 설계하고 사경회 중 목사 장립식을 거행하여 말씀과 질서를 결합함.","thesisQuote":"“민노아 목사는 한여름인 7월에 대규모 사경회를 개최하여 충청 지역 특유의 농사력을 반영한 하계 집중 훈련을 이끌었다.”","pages":"89-90","relatedCurriculums":["입학시험·3등급(청주)"],"relatedPersons":["곽안련","부해리","S.D. 밀러"]},"부해리":{"name":"부해리","nameHanja":"傅海利","nameEn":"Henry Munro Bruen","role":"남부 장로교 선교사 · 청주 사경회 강사","region":"청주, 대구","keyAction":"대구 사경회 개척과 청주 사경회 공동 강사로 참여하여 성경 본문 주해와 영적 각성을 촉구함.","historicalSignificance":"영남과 충청을 연결하며 남부 지역 사경회의 교리적 순수성과 대중 부흥을 결합하는 가교 역할을 수행함.","pages":"90, 134","thesisQuote":"“곽안련, 민노아, 부해리가 함께 강단에 섰다는 것은 청주 사경회의 막강한 권위를 보여준다.”","relatedCurriculums":["입학시험·3등급(청주)"],"relatedPersons":["곽안련","민노아"]},"S.D. 밀러":{"name":"S.D. 밀러","nameEn":"Susan Doty Miller","role":"청주 여성 선교사","region":"청주","keyAction":"1910년 청주 여성 겨울 사경회(130여 명)를 주관하고 엄격한 입학시험 제도를 통해 여성들의 등급별 지적 훈련을 주도함.","historicalSignificance":"여성들에게 단순 암기를 넘어 고린도전서 심화 강해를 제공하여 근대 학교 수준의 높은 교과 과정을 구축함.","pages":"89-90","thesisQuote":"“1910년 청주 사경회의 가장 두드러진 특징은 입학시험 제도의 도입으로, 시험 성적에 따라 여성들을 3등급으로 철저히 분리하여 교육했다.”","relatedCurriculums":["입학시험·3등급(청주)"],"relatedPersons":["민노아"]},"하디":{"name":"하디","nameEn":"Robert Arthur Hardie","role":"캐나다 출신 남감리회 의료선교사 · 1907 대부흥의 도화선","region":"원산, 서울(경성), 평양, 선천","keyAction":"1903년 8월 원산 사경회에서 자신의 영적 교만과 인종적 우월 의식, 선교 실패를 수많은 조선인 앞에서 공개 참회함. 이후 개성, 서울, 평양 사경회를 순회 인도함.","historicalSignificance":"선교사 프리즘과 서구 우월주의를 스스로 해체하여 1907년 평양 대부흥으로 이어지는 통회 자복의 거대한 불씨를 지핌.","thesisQuote":"“가르치는 자이자 영적 우위의 존재로 군림했던 백인 선교사가 조선인 군중 앞에서 자신의 도덕적·영적 파탄을 시인한 이 굴욕적 고통은 한국 교회 부흥의 분수령이 되었다.”","pages":"110-111","relatedCurriculums":["공개적 죄 고백"],"relatedPersons":["스왈런","마펫","최병헌"]},"매티 테이트":{"name":"매티 테이트","nameEn":"Mattie Tate","role":"미국 남장로교 여성선교사","region":"전라","keyAction":"전주를 기점으로 전라도 남부 깊숙한 농촌 촌락들을 순회하며 호남 여성들을 위한 순회 성경반을 개척함.","historicalSignificance":"동학 농민 혁명의 상흔과 가부장적 억압이 극심하던 호남 땅에서 여성들에게 창조주의 형상을 회복시키는 해방의 성경 교육을 제공함.","pages":"118","thesisQuote":"“불법적인 세금 징수와 가부장적 폭력이 만연하던 땅에서 테이트가 전한 성경 텍스트는 호남 여성들에게 급진적 해방의 교과서로 기능했다.”","relatedCurriculums":["순회 여성 성경반"],"relatedPersons":["하리슨","정 씨 부인"]},"하리슨":{"name":"하리슨","nameEn":"William B. Harrison","role":"미국 남장로교 전라 구역 순회 선교사","region":"전라","keyAction":"전라 구역 순회 목회를 담당하며 김옥여, 김윤찬, 이성춘, 강응칠 등 평신도 출신 조사들을 임명하여 지역 교회를 순회 목양토록 함.","historicalSignificance":"광활한 호남 평야 일대에서 평신도 조사와 전도부인을 선교의 최전선에 세워 자립적 교회망을 구축함.","pages":"120","thesisQuote":"“이 광활한 지역의 훈련을 실질적으로 이끈 주역은 소수의 서양 선교사가 아니라 철저히 한국인 조사와 전도부인들이었다.”","relatedCurriculums":["순회 여성 성경반"],"relatedPersons":["전라 조사 4인","정 씨 부인","매티 테이트"]},"전라 조사 4인":{"name":"전라 조사 4인","role":"김옥여 · 김윤찬 · 이성춘 · 강응칠 (평신도 조사)","region":"전라","keyAction":"하리슨 선교사의 관할 구역에서 각 그룹 교회를 순회하며 성례를 돕고 성경공부반을 직접 인도함.","historicalSignificance":"농한기 촌락 구석구석을 누비며 지역 신앙 공동체를 결속시키고 평신도 중심 목양을 실현한 대표적 조사 그룹.","pages":"120","thesisQuote":"“이 지역에는 김옥여, 김윤찬, 이성춘, 강응칠 등의 평신도 출신 조사들이 임명되어 각 그룹 교회를 순회하며 성경공부를 인도했다.”","relatedCurriculums":["순회 여성 성경반"],"relatedPersons":["하리슨","정 씨 부인"]},"정 씨 부인":{"name":"정 씨 부인","nameEn":"Mrs. Chung","role":"전라도 순회 전도부인","region":"전라","keyAction":"전라 구역 농촌 성경공부반을 헌신적으로 인도하다가 과로와 질병으로 소천하였으며, 그녀가 남긴 갓난아기를 교인들이 함께 거두어 기르는 신앙 연대를 낳음.","historicalSignificance":"이름 없는 기층 여성의 피땀 어린 순회 사역이 척박한 토양 위에 교회를 뿌리내리게 한 거룩한 희생의 표상.","thesisQuote":"“전도부인 정 씨 부인은 사역 도중 과로와 질병으로 소천하였는데, 그녀가 남긴 영적 유산과 갓난아기를 교인들이 거두어 기르는 신앙 공동체의 연대가 사료에 깊이 각인되어 있다.”","pages":"120","relatedCurriculums":["순회 여성 성경반"],"relatedPersons":["하리슨","전라 조사 4인"]},"백사겸":{"name":"백사겸","nameHanja":"白士兼","role":"개성(송도) 남감리교 전도인 · 시각장애인 평신도 사역자","region":"개성(송도)","keyAction":"시력을 잃고 자녀를 잃은 극심한 비극 속에서도 사복음서 전체를 완벽히 암송하고 각 장의 신학적 의미를 즉각 강해하는 탁월한 능력을 발휘함.","historicalSignificance":"글자를 보지 못하는 장애인조차 복음의 능력으로 거듭나 성경 암송과 구두 강해를 통해 지역 교회를 개척한 평신도 지식의 기적.","thesisQuote":"“육신의 시각을 잃은 상황 속에서도 사복음서 전체를 암송하였을 뿐 아니라 각 장의 신학적 의미를 즉각적으로 강해하는 능력을 보유하고 있었다.”","pages":"33","relatedCurriculums":["사역자 훈련·신학반"],"relatedPersons":["C.S. 데밍"]},"예순화":{"name":"예순화","nameEn":"Ye Soon-wha","role":"평신도 노방전도자 · 권서인","region":"강원·경기 산간","keyAction":"전직 악명 높은 도박꾼이자 난봉꾼이었으나 회심 후 나귀를 타고 시장터와 주막을 누비며 조롱과 매질을 견디며 노방 전도에 투신함.","historicalSignificance":"신학 교육을 한 시간도 받지 않은 기층 밑바닥 인물이 성령 체험 하나로 온 마을의 도덕적 각성을 이끌어낸 평신도 운동의 야성.","thesisQuote":"“전문적인 신학 교육을 단 한 시간도 받지 않은 전직 도박꾼이 성령의 임재라는 단일한 체험만으로 마을의 도덕적 각성을 주도한 사건은 평신도 운동의 원초적 생명력을 대변한다.”","pages":"31","relatedCurriculums":["입문 교재 교과"],"relatedPersons":["제임스 게일"]},"W.J.·R.S. 홀":{"name":"W.J.·R.S. 홀","nameEn":"Dr. William James Hall & Dr. Rosetta Sherwood Hall","role":"미국 북감리회 평양 의료 선교 개척자 부부 · 기홀병원 및 맹학교 설립","region":"평양","keyAction":"1890년대 초 평양 개척 선교 중 순직한 윌리엄 홀과 그의 뜻을 이어 평양 최초의 여성병원인 광혜여원(현 기홀병원)과 점자 맹학교를 세운 로제타 홀 부부. 평양 사경회 및 여성 성경반 개설의 핵심 의료·교육 거점을 마련하고 김세지를 비롯한 초기 신자들과 접촉함.","historicalSignificance":"의료와 교육을 통한 신뢰 형성을 바탕으로 기층 민중과 여성을 복음의 주체로 이끌었으며, 평양을 영적 각성의 거점으로 전환시키는 물리적·신앙적 모태를 제공함.","thesisQuote":"“홀 부부의 헌신적 의료 선교와 진료소는 훗날 평양 대부흥과 사경회의 강력한 토양이 되었으며, 김세지와 같은 탁월한 토착 평신도 사역자를 배출하는 출발점이 되었다.”","pages":"41, 73","relatedCurriculums":["3단계 교과·원문 연구"],"relatedPersons":["김세지","마펫","M.F. 스크랜턴"]}};
+  const erasData = [{"id":"all","name":"전체 종합","yearLabel":"1890s~1936","period":"전체 사경회 전개기","theme":"전국 10대 거점 사슬망 & 해외 유입 종합","thesisAnchor":"논문 제Ⅲ장~제Ⅵ장 전체","summary":"미국 샤토콰 기원 유입부터 1907-1908 대부흥, 1936년 연간 2,344개 집회 17만 명 참여에 이르는 한국 감리교 평신도 운동의 총체적 시공간 네트워크입니다.","personChainNetwork":"[해외 기원(Ⅲ)] 샤토콰 모델 유입 → [관문] 제물포·서울 허브 → [북부 벨트] 평양 대사경회(13인 여성 교사 500명 지도)·선천(날 연보 625일, 누 씨 강계 개척) → [중부·남부 벨트] 강화(홍승하 8개 교회)·수원(34개 자생망)·해주·청주·호남 4단계 자생 사슬 완성","activeRegions":["overseas_origin","incheon","seoul","ganghwa","pyongyang","sonchon","haeju","suwon","wonsan","cheongju","jeolla"],"activeLinks":[{"from":"overseas_origin","to":"incheon","type":"inflow","label":"미국 선교부 파송 & 샤토콰 모델 유입"},{"from":"incheon","to":"seoul","type":"inflow","label":"경인 철도·전신로를 통한 신학 중앙 허브화"},{"from":"incheon","to":"ganghwa","type":"itineracy","label":"존스 순회 & 14일 장기 합숙"},{"from":"seoul","to":"pyongyang","type":"revival","label":"북부 선교 벨트 연계 & 순회 강사 파견"},{"from":"pyongyang","to":"sonchon","type":"chain","label":"날 연보 625일 서약 & 산간 개척"},{"from":"seoul","to":"haeju","type":"chain","label":"도·지방·지역 3단계 분권망 구축"},{"from":"seoul","to":"suwon","type":"itineracy","label":"스크랜턴 남부 순회 & 34개 교회망"},{"from":"seoul","to":"wonsan","type":"revival","label":"하디 선교사 교류 & 1903 성령운동"},{"from":"suwon","to":"cheongju","type":"chain","label":"충청 하계 사경회 & 시험제 분반"},{"from":"seoul","to":"jeolla","type":"inflow","label":"남장로교 10년 학제 및 호남 순회반"}]},{"id":"1890s","name":"1890년대","yearLabel":"1890s","period":"초기 태동 및 해외 유입기","theme":"미국 샤토콰 모델 이식과 제물포·서울 관문 개척","thesisAnchor":"논문 제Ⅲ장 「사경회의 역사적 기원과 한국 전래」","summary":"미국 감리교의 샤토콰(Chautauqua) 성경 연구와 무디(D.L. Moody) 부흥운동이 내한 선교사를 통해 제물포와 서울로 유입되어 헤론 부인과 스크랜턴의 초기 성경반으로 싹튼 시기입니다.","personChainNetwork":"[해외/미국 본부] 샤토콰 성경연구 & 무디 부흥 → [제물포] 1885 아펜젤러·존스 상륙 & 내리교회 화도 성경반(1892) → [서울] 헤론 부인 여성 사경회(1890) & 스크랜턴 부인 사역자반(21명) → [강화] 1893 교동도 초기 복음 전파","activeRegions":["overseas_origin","incheon","seoul"],"activeLinks":[{"from":"overseas_origin","to":"incheon","type":"inflow","label":"1885 아펜젤러·스크랜턴 제물포 상륙"},{"from":"incheon","to":"seoul","type":"inflow","label":"1892 내리교회 성경반 → 서울 정동·상동"},{"from":"seoul","to":"ganghwa","type":"itineracy","label":"1893 강화 교동도 초기 복음 전파"}]},{"id":"1903","name":"1903~1906년","yearLabel":"1903~1906","period":"영적 각성과 초기 점화기","theme":"원산 하디 회개와 강화도 14일 합숙 사경회","thesisAnchor":"논문 제Ⅳ장 제1절 「사경회의 구조적 정착」 (45–55쪽)","summary":"1903년 8월 원산에서 하디(R.A. Hardie)의 영적 회개로 사경회에 부흥(Revival)의 불길이 점화되었으며, 강화도에서는 14일간 장기 합숙 사경회를 통해 평신도가 8개 교회를 자생 개척했습니다.","personChainNetwork":"[원산] 1903 하디(Hardie) 공개 회개 성령운동 → [서울] 상동·정동교회 부흥 기도회 확산 → [강화] 존스·홍승하 1904 강화 14일 장기 합숙 사경회(잠두교회 등 8개 자생 교회 설립) → [평양] 노블 부인 여성 성경반","activeRegions":["wonsan","incheon","ganghwa","seoul","pyongyang"],"activeLinks":[{"from":"wonsan","to":"seoul","type":"revival","label":"1903 하디 공개 회개 → 서울 사경회 확산"},{"from":"incheon","to":"ganghwa","type":"chain","label":"1904 강화 14일 사경회 (홍승하 8개 교회)"},{"from":"seoul","to":"pyongyang","type":"itineracy","label":"1906 평양 여성 사경회 예비 집회"}]},{"id":"1908","name":"1907~1908년","yearLabel":"1907~1908 (평양대부흥 & 확산)","period":"대부흥 폭발 및 전국 네트워크 확산기","theme":"1908년 평양·선천 날 연보 625일 & 4단계 사슬 가동","thesisAnchor":"논문 제Ⅳ장 제3절 및 제Ⅵ장 (69–78쪽)","summary":"1907년 평양대부흥의 폭발적 동력을 이어받아 1908년 전국 사경회가 폭발했습니다. 선천에서 평신도들이 625일의 날 연보(전도일)를 서약하고, 평양에서 13인 여성 교사가 500명을 가르쳤으며, 최병헌·존스 등이 사슬망을 확립했습니다.","personChainNetwork":"[평양] 마펫·스왈런(대사경회) → 13인 한국인 여성 교사(500명 초신자 전담 교육) → 한례전·양씨(학동교회 사경회) ↔ [선천] 평신도 625일 날 연보(전도일) 서약 & 누 씨(강계 7개 교회 개척) ↔ [서울] 최병헌(정동)·존스(상동) 평신도 신학 연계 ↔ [강화] 홍승하(8개 교회 자생망) ↔ [수원] 34개 교회 자생 순회망 ↔ [해주] 농촌 분권망","activeRegions":["pyongyang","sonchon","seoul","ganghwa","incheon","suwon","haeju"],"activeLinks":[{"from":"pyongyang","to":"sonchon","type":"chain","label":"1908 선천 남북교회 날 연보 625일 서약"},{"from":"pyongyang","to":"seoul","type":"revival","label":"대부흥 열기 서울 종교·상동교회 전파"},{"from":"seoul","to":"ganghwa","type":"itineracy","label":"최병헌·존스 평신도 사경회 신학 정립"},{"from":"seoul","to":"suwon","type":"itineracy","label":"수원 구역 34개 자생 교회 네트워크 가동"},{"from":"pyongyang","to":"haeju","type":"chain","label":"황해도 농촌 사경회 분권화 착수"}]},{"id":"1915","name":"1910년대","yearLabel":"1910s","period":"제도화 및 성서학원 학제화기","theme":"평양 여자성서학원 & 총선교부-구역-지교회 3층 구조","thesisAnchor":"논문 제Ⅳ장 제2절 「사경회의 교육적 제도화」 (118–122쪽)","summary":"사경회가 은혜 체험을 넘어 1915년 평양 여자성서학원, 협성여자신학교(17과목) 등 정규 학제로 고도화되었으며, 총선교부-구역-지교회의 3층 자기재생산 훈련 생태계가 정착되었습니다.","personChainNetwork":"[서울] 협성여자신학교(17과목 학제화) & 피어선기념성경학원 → [평양] 1915 평양 여자성서학원(3개년 정규화) → [청주] 1910 충북 여성 사경회 130명 시험제 분반 → [해주] 재령·해주 병원 전도부인 파송망 → [호남] 광주녀자성경학원 10년 학제","activeRegions":["pyongyang","seoul","cheongju","haeju","suwon","jeolla"],"activeLinks":[{"from":"seoul","to":"pyongyang","type":"chain","label":"1915 평양 여자성서학원 & 협성신학교"},{"from":"seoul","to":"cheongju","type":"chain","label":"1910 청주 여성 사경회 130명 & 시험 분반"},{"from":"seoul","to":"haeju","type":"chain","label":"재령·해주 병원 전도부인 교사 양성"},{"from":"seoul","to":"jeolla","type":"inflow","label":"광주녀자성경학원 10년 학제 연계"}]},{"id":"1925","name":"1920s~1930s","yearLabel":"1920s~1936","period":"대중적 정착 및 전성기","theme":"연간 2,344개 사경회, 교인 50% 참여의 대중 공론장","thesisAnchor":"논문 제Ⅴ장 및 제Ⅵ장 (80–92쪽, 240쪽)","summary":"1925년 인천 내리교회(결신 77명), 해주읍교회 800명 대사경회, 1928년 수원 남사경회 등 전국 규모로 확장되어 1936년 연간 2,344개 집회에 178,318명이 참여하는 대중적 신앙 운동의 절정을 이루었습니다.","personChainNetwork":"[인천] 1925 내리교회 대사경회(200명 참석, 결신 77명) → [해주] 1925 해주읍교회 800명 대사경회 & 1930 사범 훈련 → [수원] 1928 수원 남사경회 115명 8일 집중 → [청주] 1926 충북성경학원 → 전국 2,344개 집회 17만 명 참여(대중 공론장 만개)","activeRegions":["incheon","haeju","suwon","seoul","pyongyang","sonchon","cheongju","jeolla"],"activeLinks":[{"from":"incheon","to":"seoul","type":"revival","label":"1925 내리교회 대사경회 200명(결신 77명)"},{"from":"seoul","to":"haeju","type":"chain","label":"1925 해주읍교회 800명 & 1930 사범 훈련"},{"from":"seoul","to":"suwon","type":"chain","label":"1928 수원 남사경회 115명 8일 집중"},{"from":"seoul","to":"cheongju","type":"chain","label":"1926 충북성경학원 & 목사 장립례식"},{"from":"sonchon","to":"pyongyang","type":"chain","label":"1925 선천 남·북교회 10일 대연합"}]}];
+  const regionalChronologyData = [{"id":"pyongyang","name":"평양","nameHanja":"平壤","coords":{"x":275,"y":230},"province":"평안남도","status":"primary","badge":"대부흥 진원지 & 7등급 분반 체계","thesisChapter":"제Ⅳ장 제3절 「평양 지역 사경회의 폭발적 확산」","thesisPages":"논문 69–74쪽, 118–121쪽","overview":"1897년 겨울 50여 명으로 시작하여 1907년 장대현교회 대부흥의 진원지가 된 한국 사경회의 중심지입니다. 감리교 남산현교회와 장로교 장대현교회가 공존하며, 1908년에는 13인의 한국인 여성 교사가 500명의 초신자를 전담 가르치는 만인제사장적 사슬 구조를 완성했습니다.","sakyunghoeHistory":{"title":"평양 대사경회 (1897~1921)","period":"1897년 태동기 → 1907-1908 대부흥기 → 1921년 4학년 분반기","description":"겨울철 농한기 합숙 사경회로 시작하여 1,000~2,000명이 운집하는 대규모 신앙 공론장으로 발전. 1921년 남산현교회에서는 7일간 500~700명이 참여하여 제1~4학년 분반 수업을 진행함.","scale":"집회당 500~2,000명 운집 (평양 교인의 대다수 참여)","characteristics":["자비량(自費糧): 먼 시골에서 쌀과 땔감을 지고 걸어와 합숙","통회자복 기도와 영적 갱신","수료자가 곧바로 다음 하급반 강사로 투입되는 선순환","감리교 남산현교회와 장로교 장대현교회의 부흥 연대"]},"chainModel":{"sakyunghoe":"장대현·남산현 대사경회 (겨울 집중 1~2주간 합숙)","bibleWomen":"여성 교사 13인, 한례전·양씨, 전도부인 김세지(Sadie Kim)","bibleClass":"평양 여자성서학원(1915), 제1~4학년 학제화, ‘성경공부’반","localChurch":"장대현교회, 남산현교회, 강서군 학동교회 등 시골 촌락 교회 개척","refluxSummary":"대사경회에서 훈련된 여성들이 하급반 교사로 직결 투입되고, 수료생들이 시골 촌락으로 돌아가 교회 개척과 주일학교를 이끄는 만인제사장적 환류 구조"},"keyPersons":[{"name":"스왈런","role":"미북장로회 선교사","action":"평양 대사경회 초기 조직자, 영적 각성 주도 (p.70)"},{"name":"마펫","role":"선교사","action":"장대현교회 담임, 평양신학교 설립 및 사경회 학제화 (p.69)"},{"name":"김세지","role":"토착 전도부인 (Sadie Kim)","action":"평양 여성 성경반 인도, 시골 여성 전도 (p.41)"},{"name":"한례전","role":"평신도 여성 지도자","action":"강서군 학동교회 부인사경회를 주도하여 자생적 부흥 견인 (p.72)"},{"name":"양씨","role":"평신도 여성","action":"한례전과 동역하여 평양 외곽 여성 성경 공부망 구축 (p.72)"}],"curriculum":{"levels":"초급반(한글·십계명) → 제1~4학년제 → 7등급 분반","subjects":["마태복음·요한복음 강해","조선어(한글) 읽기","웨슬리 회심과 성화 교리","위생학·가정 윤리"],"practicalAction":"성경 공부 후 즉시 평양 시내 축호전도 및 시골 촌락 성경반 파송"},"presbyterianComparison":{"methodistAspect":"감리교(남산현): 사회적 성화와 대중 계몽, 여성의 능동적 공론장 참여 보장","presbyterianAspect":"장로교(장대현): 네비어스 정책에 따른 철저한 자립·자전과 엄격한 교리 문답","contrastSummary":"평양에서는 두 교단이 지리적으로 인접하여 경쟁과 협력을 반복하며 한국 최대의 기독교 거점 벨트를 형성함 (논문 125–130쪽)","page":"125–130"},"foreignOriginAndInflow":{"originConcept":"미국 샤토콰(Chautauqua) 성경 연구 및 무디(Moody) 부흥 집회 모델","inflowRoute":"미국 북장로회/미감리회 → 제물포 상륙 → 서울 정동 배재·이화 → 평양 거점 전래","indigenization":"서구식 강습회를 조선 민중의 농한기 합숙 및 통회 자복 부흥회로 재창조","page":"31–38"},"otherChapterCases":{"chapter":"제Ⅳ장 제2절 및 제Ⅴ장","title":"평양 여자성서학원(1915) 3개년 정규화 & 1920s 대중화","description":"부흥회 성격의 단기 합숙 사경회를 넘어, 1915년 평양 여자성서학원이 설립되어 3개년 정규 교과과정(17과목)과 사범 훈련으로 제도화되었으며, 1920년대에는 연간 수천 명이 참여하는 평양 기독교 대중 공론장으로 정착함.","page":"118–122, 240"},"eraActivities":{"1903":"원산 하디 회개 소식이 전해지며 사경회에 통회자복 기도 운동 발아","1908":"1907 대부흥 직후인 1908년, 여성 교사 13인이 500명 초신자반 전담 교수 (p.70)","1915":"1915 평양 여자성서학원 설립, 제1~4학년 정규 학제로 고도화 (p.119)","1925":"1921 남산현교회 7일간 700명 분반 사경회 등 대중적 성숙기 지속","1890s":"1897년 겨울 첫 사경회 시작 (50여 명 등록, 자비량 합숙)"},"notableQuote":{"text":"“평양 사경회에 참석한 여성들은 짚신을 신고 쌀자루를 머리에 인 채 수백 리를 걸어왔다. 그들은 지식만을 구한 것이 아니라 살아있는 성령의 임재를 체험하고자 했다.”","source":"『The Korea Mission Field』 4, no. 3 (1908): 42"}},{"id":"sonchon","name":"선천","nameHanja":"宣川","coords":{"x":235,"y":160},"province":"평안북도","status":"primary","badge":"날 연보(625일) & 누 씨의 단독 개척","thesisChapter":"제Ⅳ장 제3절 「선천 여성 사경회와 날 연보 운동」","thesisPages":"논문 75–78쪽, 107쪽","overview":"1901년 시작되어 1906년 2,602명이 등록한 전례 없는 대규모 사경회 거점입니다. 평신도들이 돈 대신 전도할 날수를 헌납하는 ‘날 연보(Day Offering, 625일 서약)’가 폭발했으며, 전도부인 ‘누 씨(Nu Ssi)’가 험산을 넘어 강계에 7개 교회를 단독 개척한 자전(Self-propagation)의 상징적 지역입니다.","sakyunghoeHistory":{"title":"선천 여성 사경회 & 남북교회 연합 대사경회","period":"1901년 시작 → 1906년 16개 반 2,602명 등록 → 1925년 연합 사경회","description":"학습 수준에 따라 철저한 7등급 분반 체계를 운영하였으며, 가정 화목·신체 위생·영아 돌봄 등 실생활 교과를 편성함. 1925년에는 선천읍 남·북 2개 교회가 10일간 연합 대사경회를 거행함.","scale":"1906년 연간 2,602명 등록 (전국 최고 기록 중 하나)","characteristics":["돈 대신 복음 전할 날수를 바치는 ‘날 연보’ 창안","학습자 수준별 엄격한 7등급 분반 체계","여성의 일상 위생·육아·가정 화목을 성화 교리와 통합","산간오지 강계 7개 교회로의 자생적 복음 확산"]},"chainModel":{"sakyunghoe":"선천 여성 사경회 (16개 반, 7등급 분반)","bibleWomen":"‘누 씨(Nu Ssi)’ & 날 연보 평신도 전도단","bibleClass":"7등급 성경반 & 선천 성서학원 연계","localChurch":"선천 남·북교회 & 강계 구역 7개 자생 교회","refluxSummary":"자비량 날 연보로 축적된 전도 노동력이 산간벽지 농촌 사경회로 파견되어, 외부 자금 없이 교회를 증식시키는 자전(Self-propagation)의 절정"},"keyPersons":[{"name":"누 씨","role":"전설적 토착 전도부인 (Nu Ssi)","action":"선천 사경회 수료 후 홀로 험산 넘어 강계에 7개 교회 개척 (p.107)"},{"name":"샤프","role":"미북장로회 여성 선교사","action":"선천 여성 사경회 7등급 분반 커리큘럼 설계 (p.75)"},{"name":"체이스","role":"여성 선교사","action":"선천 여성 성서학원 운영 및 교재 편찬 (p.76)"}],"curriculum":{"levels":"1등급(기초 한글)부터 7등급(신구약 고급 신학)까지","subjects":["복음서 강해","위생과 영아 보육","기독교 가정 윤리","전도 실천론"],"practicalAction":"날 연보 작정 후 촌락 순회 전도 625일 실행"},"presbyterianComparison":{"methodistAspect":"감리교의 포용적 구원관과 대비되는 엄격한 네비어스 자립 원칙 구현","presbyterianAspect":"선천은 한국 장로교 ‘자립(Self-support)과 자전(Self-propagation)’의 세계적 모범 사례로 보고됨","contrastSummary":"외부 선교비 지원 없이 오직 평신도의 날 연보와 자비량만으로 산간오지 교회 개척 완수 (논문 130–135쪽)","page":"130–135"},"foreignOriginAndInflow":{"originConcept":"자비량 전도 헌신 및 평신도 사역자 훈련","inflowRoute":"평양 선교기지 → 의주 가도 → 선천 선교 스테이션 개설(1901)","indigenization":"헌금할 돈이 없는 가난한 민중이 자신의 노동 시간을 하나님께 바치는 ‘날 연보’로 토착화","page":"75–78"},"eraActivities":{"1903":"1901년 선천 선교 스테이션 공식 설립 후 정기 여성 사경회 개설","1908":"1906년 2,602명 등록 및 1908년 날 연보 625일 폭발적 작정 (p.75-76)","1915":"선천 성서학원 연계 및 누 씨의 강계 7개 교회 자립 목양 정착 (p.107)","1925":"1925년 선천읍 남·북 2개 교회 연합 10일 사경회 거행 (p.78)","1890s":"의주·선천 일대 초기 권서인 순회 및 복음 수용기"},"notableQuote":{"text":"“단 몇 분 만에 남성들은 625일의 날 연보를 서약했다. 돈이 없는 그들은 자신의 몸과 시간을 바쳐 이웃 촌락으로 복음을 전하러 떠났다.”","source":"『The Korea Mission Field』 2, no. 5 (1906): 98"}},{"id":"seoul","name":"서울(경성)","nameHanja":"漢城·京城","coords":{"x":370,"y":390},"province":"경기도","status":"primary","badge":"중앙 신학 허브 & 여성 대공론장","thesisChapter":"제Ⅳ장 제3절 「서울 지역 사경회와 지식인·여성 리더십」","thesisPages":"논문 57–62쪽, 105쪽, 119–121쪽","overview":"1890년대 초 헤론 부인 모임과 스크랜턴 부인의 사역자 훈련반(21명)으로 태동하여, 정동제일교회, 상동교회, 승동교회, 종교교회로 이어진 중앙 신학 허브입니다. 최병헌의 토착화 신학이 태동하고, 협성여자신학교(17과목)와 피어선기념성경학원이 설립되어 전국 사경회 강사를 배출한 최고 교육 사슬의 정점입니다.","sakyunghoeHistory":{"title":"서울 부인·사역자 대사경회 (1890s~1926)","period":"1890년대 초 헤론 모임 → 1899 사역자 훈련반(21명) → 1920s 연합 대사경회","description":"초기 지식인·여성 엘리트가 참여하는 신학 토론과 합숙 훈련으로 시작. 1924~26년 경성 대사경회에서는 승동·종교교회에 600~700명이 운집하여 민족 현실과 기독교 신앙을 결합함.","scale":"집회당 200~700명 (지도자급 사역자 집중 양성)","characteristics":["최병헌의 유교·불교 대화 및 토착적 기독교 변증 신학","사역자 훈련반 21명 합숙을 통한 전국 순회 강사 배출","협성여자신학교(17개 정규과목) 학제화의 요람","남대문 세브란스 병원교회 중심 의료-신앙 결합"]},"chainModel":{"sakyunghoe":"정동·상동·승동·종교교회 대사경회","bibleWomen":"사역자 훈련반 21인, 여성 지식인 리더, 김한영·신흥우","bibleClass":"협성여자신학교, 피어선기념성경학원, 스크랜턴 성경반","localChurch":"정동제일교회, 종교교회, 남대문 병원교회 등","refluxSummary":"서울 중심의 고도화된 신학 교육과 사역자 양성은 다시 전국 각지 구역 사경회의 주강사 및 순회 교사로 파송되어 전국적 환류망을 형성함"},"keyPersons":[{"name":"최병헌","role":"한국인 최초 감리교 목사","action":"정동제일교회 담임, 탁월한 사경회 강사, 토착 신학 정립 (p.45, 119)"},{"name":"스크랜턴","role":"미감리회 의사·선교사","action":"상동교회 설립, 상민·민중 중심 사경회와 병원 사역 (p.58)"},{"name":"아펜젤러","role":"미감리회 개척 선교사","action":"정동교회 개척, 배재학당 설립, 초기 성경 번역 (p.57)"},{"name":"신흥우","role":"평신도 민족 지도자","action":"서울 사경회 지식인 세션 주도, 기독교 사회운동 (p.119)"},{"name":"김한영","role":"초기 목회자·교역자","action":"종교교회 중심 경성 대사경회 강사 (p.119)"}],"curriculum":{"levels":"평신도 기초반 → 사역자반 → 협성여자신학교 17과목 정규학제","subjects":["신구약 개론·성서지리","웨슬리안 성화론","교회사·조직신학","변증학(유교와의 비교)"],"practicalAction":"수료자 전국 8대 거점 사경회 주강사 및 순회 감독 파송"},"presbyterianComparison":{"methodistAspect":"감리교(정동·상동): 배재·이화·보구여관을 통한 교육·의료·사회참여의 입체적 결합","presbyterianAspect":"장로교(승동·연동): 엄격한 성경 원문 강해와 교리적 정통성 수호","contrastSummary":"서울에서는 승동·종교교회 등에서 초교파 연합 사경회를 열며 일제 강점기 민족의 공론장 역할 수행 (논문 58–60쪽)","page":"58–60"},"foreignOriginAndInflow":{"originConcept":"미국 본부의 대도시 연합 부흥회 및 신학 교육 모델","inflowRoute":"미감리회 선교본부 → 제물포항 → 정동 선교 기지(1885)","indigenization":"서구 신학을 양반 지식인(최병헌)과 기층 상민(상동 스크랜턴) 모두에게 맞춤형으로 토착화","page":"57–62"},"eraActivities":{"1903":"하디 선교사 초빙 집회, 정동·상동교회 회개 운동 확산","1908":"최병헌 목사의 정동제일교회 대사경회, 평양대부흥의 신학적 정리 (p.45, 119)","1915":"협성여자신학교 17개 정규 과목 및 피어선기념성경학원 상설화 (p.121)","1925":"1924~26 경성 대사경회(승동·종교교회 700명 운집) (p.58)","1890s":"1890 헤론 부인 모임 → 1899 사역자 훈련반 21명 합숙 훈련 (p.58-59)"},"notableQuote":{"text":"“서울 사경회에 모인 21명의 사역자들은 단순한 청강자가 아니었다. 그들은 일주일간 숙식을 같이하며 진리를 논쟁했고, 각자의 고향으로 돌아가 스스로 사경회를 열었다.”","source":"『The Korean Repository』 5 (1898): 312"}},{"id":"incheon","name":"인천·제물포","nameHanja":"仁川·濟物浦","coords":{"x":325,"y":410},"province":"경기도","status":"primary","badge":"선교 관문 & 내리교회 3개 학년제","thesisChapter":"제Ⅳ장 제3절 「인천·제물포 사경회와 개항장 선교」","thesisPages":"논문 65–68쪽, 120–122쪽","overview":"1885년 아펜젤러와 스크랜턴이 상륙한 한국 선교의 관문입니다. 인천 내리교회를 거점으로 1892년부터 정기 성경반이 가동되었으며, 존스(G.H. Jones) 선교사의 주도로 개항장의 급격한 세속화 속에서 교인들의 신앙 정체성을 지키는 3개 학년제 성경반 및 제물포 교사 훈련소가 구축되었습니다.","sakyunghoeHistory":{"title":"인천 내리교회 대사경회 & 제물포 교사훈련","period":"1892년 내리교회 성경반 → 1900년대 교사 훈련소 → 1925년 대사경회","description":"개항장의 혼란과 세속화를 방어하기 위해 엄격한 3개 학년제 교육을 실시함. 1925년 내리교회 대사경회에서는 200여 명이 참석하여 새신자 77명이 결신하는 놀라운 결실을 맺음.","scale":"집회당 100~200명 (평신도 교사 집중 양성)","characteristics":["한국 최초 성경반 중 하나인 1892 내리교회 성경반","제물포 교사 훈련소(구역 50명, 시내 50명 지도자 재교육)","마가복음 60권을 자비로 구입해 배포한 평신도의 자발적 전도","강화도 선교의 전진 기지 역할"]},"chainModel":{"sakyunghoe":"내리교회 정기 사경회 (1925년 결신 77명)","bibleWomen":"제물포 평신도 남성 전도단, 구역 순회 전도부인","bibleClass":"내리교회 정기 성경반(1892), 제물포 교사 훈련소","localChurch":"인천 내리교회 및 제물포 구역 개체 교회들","refluxSummary":"제물포 교사 훈련소에서 재교육받은 100명의 지도자가 인천 시내와 주변 섬(영종, 강화)으로 흩어져 지교회를 자립시키는 관문형 환류망"},"keyPersons":[{"name":"G.H. 존스","role":"미감리회 선교사 (조원시)","action":"내리교회 2대 담임, 신학월보 창간, 인천·강화 사경회 체계화 (p.65)"},{"name":"아펜젤러","role":"선교사","action":"1885 제물포 상륙, 초기 인천 신앙 공동체 태동 (p.65)"},{"name":"김기범","role":"한국인 최초 목사","action":"내리교회 출신으로 사경회를 통해 목회자로 성장 (p.65)"}],"curriculum":{"levels":"초보반 → 3개 학년제(1학년 기초, 2학년 교리, 3학년 지도자)","subjects":["신구약 요의","감리교 교리 및 장정","세속화 극복 신앙 생활","교사 교수법"],"practicalAction":"마가복음 60권 자비 배포, 축호전도 130명 결신"},"presbyterianComparison":{"methodistAspect":"내리교회 중심의 감리교 단독 주도형 항구 도시 선교","presbyterianAspect":"장로교는 주로 북부 내륙과 평양에 집중한 반면, 감리교는 인천 개항장 확보","contrastSummary":"개항장 특유의 외국인 조계지와 상업 환경 속에서 토착 민중을 교사로 길러내는 교육적 승부수 (논문 65–68쪽)","page":"65–68"},"foreignOriginAndInflow":{"originConcept":"항구 도시 선교 센터 및 주일학교 교사 훈련소(Sunday School Institute)","inflowRoute":"미국 샌프란시스코/시애틀 → 요코하마 → 제물포항 입항","indigenization":"외세 침략의 관문인 인천에서 민족의 자주적 신앙 형성을 이끈 성경반 운영","page":"65–66"},"eraActivities":{"1903":"존스 선교사의 제물포 교사 훈련소 가동 (지도자 100명 교육, p.120)","1908":"평신도 남성의 마가복음 60권 자비 배포 및 130명 결신 (p.65, 120)","1915":"내리교회 3개 학년제 성경반의 안정적 학사 정착 (p.121)","1925":"1925 내리교회 대사경회 200명 참여, 새신자 77명 작정 결신 (p.65)","1890s":"1892 내리교회 정기 성경반 개설 및 강화도 전도 파송 (p.66)"},"notableQuote":{"text":"“제물포의 한 평신도는 자신의 돈으로 마가복음 60권을 사서 이웃에게 나누어주었다. 그 결과 130명이 결신하고 30명이 즉시 교회에 등록했다.”","source":"『The Korea Mission Field』 1, no. 12 (1905): 230"}},{"id":"ganghwa","name":"강화","nameHanja":"江華","coords":{"x":310,"y":375},"province":"경기도","status":"primary","badge":"14일 장기 합숙 & 홍승하 8개 교회 개척","thesisChapter":"제Ⅳ장 제3절 「강화도 사경회와 섬 지역 자생적 교회 개척」","thesisPages":"논문 45쪽, 63–66쪽, 121쪽","overview":"1893년 교동도와 시루미에서 시작되어 15년 만에 강화도 내 30여 개 자생 교회를 일군 한국 교회사 최고의 자생적 토착화 모델입니다. 강화읍내교회 14일(2주일) 장기 합숙 사경회를 통해 평신도 지도자 홍승하가 홀로 8개 교회를 개척하고 500여 명을 자립 목양한 ‘평신도 사도직’의 현장입니다.","sakyunghoeHistory":{"title":"강화 14일(2주일) 장기 합숙 사경회","period":"1893 교동도 태동 → 1904~1908 14일 합숙 사경회 전성기","description":"섬이라는 지리적 고립성을 14일간의 장기 신학 몰입으로 승화시킴. 서울 사경회를 수료한 평신도 지도자들이 섬 전역의 10여 개 교회를 순회하며 교인 수를 40명에서 130명으로 급증시킴.","scale":"집회당 100~300명 (섬 주민 전체가 복음화되는 파급력)","characteristics":["전국 최장 기간인 14일(2주일) 전일제 합숙 사경회","홍승하 평신도 조사의 8개 교회 500명 자립 목양","서울 사경회 수료 후 고향 섬으로 돌아와 부흥시키는 순환","유교 선비 계층(박능일 등)의 집단 개종과 사경회 주도"]},"chainModel":{"sakyunghoe":"강화읍내교회 14일 장기 합숙 사경회","bibleWomen":"강화 평신도 지도자 홍승하, 박능일, 강화 여성 전도반","bibleClass":"강화 잠두교회 성경반, 동서남북 4대 구역 성경 공부","localChurch":"강화읍내교회, 교동교회, 강화 30여 개 자생 교회","refluxSummary":"섬이라는 고립성을 14일간의 장기 신학 몰입으로 승화시켜, 외부 선교사의 상주 없이도 평신도들이 스스로 교회를 치리하고 30여 개로 증식시킨 완벽한 자생 생태계"},"keyPersons":[{"name":"홍승하","role":"평신도 조사·지도자","action":"사경회를 통해 거듭난 후 8개 교회 개척, 500여 명 자립 목양 (p.45)"},{"name":"박능일","role":"강화 초기 감리교 지도자","action":"유교 훈장에서 개종 후 강화 사경회 조직 및 학교 설립 (p.63)"},{"name":"G.H. 존스","role":"선교사","action":"강화도 순회 사경회 지원, 평신도 자치권 위임 (p.65)"}],"curriculum":{"levels":"초신자반 → 14일 전일제 심화반","subjects":["창세기부터 요한계시록까지 성경 통독","웨슬리 십의일조 및 자립론","축호전도 실습","속회 운영법"],"practicalAction":"사경회 종료 즉시 강화도 전역 10개 마을 순회 전도"},"presbyterianComparison":{"methodistAspect":"감리교 속회(Class Meeting) 제도를 섬 마을 공동체 조직과 완벽히 융합","presbyterianAspect":"장로교 당회 중심 치리와 달리, 평신도 권사와 속장이 사실상 목회 전담","contrastSummary":"한국 감리교가 자랑하는 평신도 자립 목회의 최고 금자탑 (논문 63–66쪽)","page":"63–66"},"foreignOriginAndInflow":{"originConcept":"영국 웨슬리의 옥외 설교 및 초기 감리교 순회(Itinerancy) 제도","inflowRoute":"제물포항 → 강화도 갑곶나루 → 교동도·시루미 전래","indigenization":"양반 선비들이 상민과 함께 14일간 솥단지를 걸고 밥을 지어먹으며 계급을 타파한 영적 공동체","page":"63–66"},"eraActivities":{"1903":"1904 강화 14일 장기 합숙 사경회 확립 (p.65)","1908":"홍승하 평신도 조사의 8개 자생교회 500명 부흥 달성 (p.45)","1915":"강화 전역 30여 개 자생 교회망 완성 및 잠두교회 성서학원 연계 (p.66)","1925":"섬 전체 인구의 높은 기독교화 달성 및 독립운동 연계","1890s":"1893 교동도 이승환 모친 세례, 박능일 등 강화 초기 결신 (p.63)"},"notableQuote":{"text":"“홍승하는 선교사로부터 한 푼의 월급도 받지 않았다. 그는 오직 사경회에서 얻은 말씀의 능력만으로 8개의 교회를 개척하고 500명의 신도를 목양했다.”","source":"박영철(2026), 45쪽"}},{"id":"haeju","name":"해주·황해","nameHanja":"海州·黃海","coords":{"x":265,"y":315},"province":"황해도","status":"primary","badge":"도·지방·지역 3단계 분권망 & 사범 훈련","thesisChapter":"제Ⅳ장 제3절 「황해도 사경회의 3단계 분권 체계와 사범 교육」","thesisPages":"논문 80–84쪽, 101쪽, 108–109쪽","overview":"중앙집중형에서 탈피하여 도(Provincial)·지방(District)·지역(Local) 사경회의 3단계 분권 체계를 완성한 지역입니다. 해주읍교회 700~800명 대사경회와 더불어 1930년 전도부인 사범 훈련(오전 이론, 오후 설교 시연) 및 재령병원 전도부인 교사 훈련을 통해 농촌 평신도를 전문 강사로 전환시켰습니다.","sakyunghoeHistory":{"title":"도·지방·지역 사경회 3단계 & 1925 해주 대사경회","period":"1900년대 초기 분권망 → 1925 대사경회(800명) → 1930 사범훈련","description":"중앙(도)에서 배운 지도자가 구역(지방)으로 내려가 가르치고, 농촌 단위(지역)에서 성경반을 수십 곳 개설함. 1925년 김선두 목사 초빙 해주읍교회 사경회에서는 800여 명이 운집하여 새신자 60여 명이 작정함.","scale":"해주읍교회 700~800명, 농촌 각처 수십~수백 명","characteristics":["도·지방·지역 사경회 3단계 계층적 분권 시스템","1930 해주 전도부인 사범 훈련(오전 신학, 오후 시연 및 교정)","재령병원 전도부인의 토요 교사 훈련반 연계","가정 통신 성경 연구(요한복음 5회 통독 서면 제출)"]},"chainModel":{"sakyunghoe":"도사경회(중앙) → 지방사경회(구역) → 지교회사경회","bibleWomen":"해주 전도부인 사범단, 재령병원 전도부인단","bibleClass":"사범 훈련반(Normal Class), 토요 교사반, 가정 통신 성경반","localChurch":"해주읍교회, 재령교회 및 황해도 농촌 단위 거점 교회들","refluxSummary":"도사경회(중앙)에서 지식이 흘러내려가고, 농촌 평신도가 다시 중앙으로 와 강사 역량을 얻어 복귀하는 피라미드형 지식 순환 환류"},"keyPersons":[{"name":"김선두","role":"사경회 부흥 강사 목사","action":"1925 해주읍교회 대사경회 인도, 60여 명 새신자 결신 (p.80-81)"},{"name":"버딕","role":"선교사","action":"황해도 3단계 사경회 행정 체계화 (p.82)"},{"name":"해주 전도부인단","role":"토착 여성 사범단","action":"설교 시연 및 상호 교정을 거쳐 농촌 사경회 강사로 활약 (p.82-83)"}],"curriculum":{"levels":"지역 기초반 → 지방 중급반 → 도 사범훈련반","subjects":["요한복음 심층 통독","교리 요목","교수법(Normal Method) 및 설교 실습","기독교 위생학"],"practicalAction":"가정 성경 연구 서면 제출 및 농촌 지교회 주일학교 개설"},"presbyterianComparison":{"methodistAspect":"감리교 구역회 제도와 장로교 노회 제도가 황해도에서 치열하게 상호 작용","presbyterianAspect":"재령 선교 스테이션의 강력한 장로교 사경회 네트워크와 병존","contrastSummary":"교단 간 경쟁을 넘어 3단계 분권 모델을 통해 황해도 전역에 촘촘한 신앙망 구축 (논문 80–84쪽)","page":"80–84"},"foreignOriginAndInflow":{"originConcept":"사범학교(Normal School) 방식의 교사 양성 시스템","inflowRoute":"서울 감리교/장로교 본부 → 경의선 철도 → 해주·재령 선교 거점","indigenization":"여성 전도부인들이 직접 강단에 서서 설교를 시연하고 동료들의 평가를 받는 전문 교육으로 발전","page":"82–83"},"eraActivities":{"1903":"도·지방·지역 3단계 분권 체계의 행정적 골격 마련 (p.82)","1908":"재령병원 전도부인의 토요 교사 훈련반 본격 가동 (p.41)","1915":"가정 통신 성경 연구(요한복음 5회 통독 서면 제출제) 정착 (p.101)","1925":"1925 해주읍교회 800명 대사경회 및 1930 사범 훈련 정점 (p.80-83)","1890s":"황해도 서해안 포구 중심 초기 사경회 태동"},"notableQuote":{"text":"“전도부인들은 오전에는 엄격한 성경 이론을 배웠고, 오후에는 직접 설교를 시연했다. 강사와 동료들은 장단점을 가감 없이 비평하여 그들을 노련한 강사로 단련시켰다.”","source":"박영철(2026), 82–83쪽"}},{"id":"suwon","name":"수원·경기","nameHanja":"水原·京畿","coords":{"x":375,"y":450},"province":"경기도","status":"primary","badge":"34개 교회 평신도망 & 주야 삼중 일과","thesisChapter":"제Ⅳ장 제3절 「수원 지역 34개 교회와 평신도 속장망」","thesisPages":"논문 85–89쪽, 100쪽","overview":"1895년 스크랜턴의 순회 구역으로 시작하여 1907년 부흥기 34개 교회가 점조직처럼 자생한 남부 경기 선교의 핵입니다. 1928년 수원읍 예배당 남사경회(생도 115명, 8일간)로 대표되며, ‘주간 교리 학습 + 오후 시내 축호전도 + 야간 홍병선 부흥강연’의 삼중 일과를 통해 일상 공간을 성화시켰습니다.","sakyunghoeHistory":{"title":"1895 순회 사역 → 1907 부흥 → 1928 남사경회","period":"1895 스크랜턴 순회 → 1907 34개 교회망 → 1928 8일 남사경회","description":"선교사 1명이 넓은 지역을 맡는 한계를 극복하기 위해 평신도 속장과 조사를 훈련시켜 34개 교회를 자율 운영하게 함. 1928년 남사경회는 115명의 생도가 8일간 엄격한 숙식을 함께함.","scale":"수원읍 115명 합숙, 구역 34개 교회 수천 명 연계","characteristics":["선교사 1명에 평신도 속장망 34개 교회가 자생한 분권 모델","주간 교리 + 오후 정규 축호전도 + 야간 부흥 강연 삼중 순환","수원·음죽 장호원 사범 훈련(수강생 시연 상호 교수)","100명 이상 학생이 재학한 기독교 학교 병행 운영"]},"chainModel":{"sakyunghoe":"수원읍 남사경회 (8일 전일제, 생도 115명)","bibleWomen":"스크랜턴 파견 전도부인, 평신도 속장·본처전도사단","bibleClass":"사범 훈련반(Normal Class), 기독교 학교 연계 성경반","localChurch":"수원읍교회 및 수원 구역 34개 개체 교회망","refluxSummary":"낮에 배운 성경을 오후에 수원 시내 축호전도로 즉시 시험하고, 밤에 부흥회로 결단하는 일상 침투형 환류 고리"},"keyPersons":[{"name":"스크랜턴","role":"선교사","action":"1895 수원 순회 구역 개척, 전도부인 가정 방문 지원 (p.85-87)"},{"name":"홍병선","role":"기독교 사회운동가·강사","action":"1928 수원 남사경회 야간 부흥 강연 인도 (p.88)"},{"name":"수원 평신도 속장단","role":"토착 평신도 지도자들","action":"선교사 부재 시 34개 교회를 지키고 목양한 주역들 (p.86)"}],"curriculum":{"levels":"초신자 교리반 → 속장 훈련반 → 사범반","subjects":["십계명과 감리교 교리","축호전도 요령","농촌 위생과 금주·단연","웨슬리 성화와 사회적 책임"],"practicalAction":"오후 수원 시내 가가호호 축호전도 전원 투입"},"presbyterianComparison":{"methodistAspect":"감리교 속회망의 강력한 지역 침투력과 전인적 사회 계몽","presbyterianAspect":"경기 남부 장로교회들과 선교 구역 분할 협정을 준수하며 협력","contrastSummary":"점조직처럼 흩어진 농촌 교회를 평신도 지도자 네트워크로 묶어낸 전형적 감리교 모델 (논문 85–89쪽)","page":"85–89"},"foreignOriginAndInflow":{"originConcept":"미국 농촌 순회 목회(Circuit Riding) 및 속회 훈련","inflowRoute":"서울 상동교회 → 수원 삼남대로(수원 선교 스테이션) 연계","indigenization":"수원 장날과 농한기를 활용한 시장통 전도 및 농촌 속장 중심 자생화","page":"85–86"},"eraActivities":{"1903":"평신도 속장들의 자생적 교회 개척으로 34개 교회망 기초 형성 (p.86)","1908":"1907-1908 대부흥기 경기 남부 34개 교회의 연합 사경회 (p.86)","1915":"음죽 장호원 사범 훈련 및 기독교 학교 교육 연계 (p.100)","1925":"1928 수원읍 예배당 남사경회(생도 115명, 8일 집중) 거행 (p.88)","1890s":"1895 스크랜턴 선교사의 수원 순회 구역 설정 및 초기 전도 (p.85)"},"notableQuote":{"text":"“선교사는 한 명뿐이었으나 34개의 교회가 불꽃처럼 타올랐다. 평신도 속장들이 사경회에서 배운 말씀으로 매주일 교회를 인도했기 때문이다.”","source":"박영철(2026), 86쪽"}},{"id":"cheongju","name":"청주","nameHanja":"淸州","coords":{"x":420,"y":510},"province":"충청북도","status":"primary","badge":"하계 사경회 & 시험제 3등급 분반","thesisChapter":"제Ⅳ장 제3절 「청주 사경회와 농사력 반영 및 교회 정치의 결합」","thesisPages":"논문 89–91쪽","overview":"겨울 농한기뿐 아니라 농사력을 정밀 반영하여 7월 하계 집중 사경회를 도입한 충청권의 거점입니다. 곽안련, 민노아, 부해리 등 최고 신학자들이 강사로 나섰으며, 입학시험을 치러 초급(한글·교리)·중급(복음서)·고급(고린도전서)으로 엄격 분반했습니다. 특히 사경회 한복판에서 평신도 장로 안수와 목사 장립례식을 거행하여 말씀과 질서를 통합했습니다.","sakyunghoeHistory":{"title":"1910 여성 사경회 & 1920·1926 하계 사경회","period":"1910 여성 사경회(130명) → 1920년대 하계 집중 사경회","description":"모내기를 마친 7월 하계 사경회를 개최하여 농촌 실정을 고려함. 입학시험을 거쳐 3개 등급으로 나누는 학사 관리를 엄격히 적용하였으며, 1926년 충북성경학원을 상설화함.","scale":"사경회당 130~300명 (충북 전역 교역자·평신도 총집결)","characteristics":["농사력을 반영한 7월 하계 집중 사경회 운영","성적에 따른 입학시험제 3개 등급반(초급·중급·고급)","사경회 현장에서 목사 장립례식 및 평신도 장로 안수 거행","충북성경학원 상설화를 통한 연중 훈련 체계 구축"]},"chainModel":{"sakyunghoe":"청주읍교회 하계·동계 사경회","bibleWomen":"충북 전도부인단, 안수받은 평신도 장로단","bibleClass":"입학시험제 3개 등급반, 충북성경학원(1926)","localChurch":"청주읍교회 및 충북노회 관할 개체 교회들","refluxSummary":"사경회 현장에서 직접 교회의 공적 지도자를 세우는 교회 정치(Ecclesiastical Polity)와 사경회의 완벽한 융합 환류"},"keyPersons":[{"name":"민노아","role":"미북장로회 선교사 (F.S. Miller)","action":"청주 선교 스테이션 개척, 찬송가 작사, 청주 사경회 지도 (p.89)"},{"name":"곽안련","role":"신학자·선교사 (C.A. Clark)","action":"청주 사경회 강사, 네비어스 정책 및 목회학 교수 (p.90)"},{"name":"로해리","role":"목사 (H.A. Rhodes)","action":"청주 사경회 현장에서 목사 장립식을 거행한 신학자 (p.90-91)"}],"curriculum":{"levels":"입학시험 통과 기준: 초급반 → 중급반 → 고급반","subjects":["초급: 한글 읽기, 기초 요리문답","중급: 복음서 강해, 사도행전","고급: 고린도전서, 교회 정치와 치리"],"practicalAction":"교회 직분자로서의 치리 및 충북 각 읍면 순회 전도"},"presbyterianComparison":{"methodistAspect":"감리교 충청 구역과 장로교 청주 스테이션의 신사협정 및 협력","presbyterianAspect":"장로교 특유의 엄격한 교리 시험과 대의제 치리(장로 안수)의 철저한 관철","contrastSummary":"은혜의 감정적 분출에 머물지 않고 사경회를 통해 교회의 제도적 뼈대를 구축한 모범 (논문 89–91쪽)","page":"89–91"},"foreignOriginAndInflow":{"originConcept":"장로교 노회 사경회 및 신학교 예비 과정","inflowRoute":"서울 선교부 → 경부선 철도 조치원역 → 청주 읍내 진입","indigenization":"한국 농촌의 모내기 후 농한기(7월)를 찾아내 하계 사경회로 정착시킴","page":"89–90"},"eraActivities":{"1903":"민노아 선교사의 청주 선교 스테이션 부지 확보 및 사경회 준비","1908":"청주읍교회 초기 성경반 및 평신도 지도자 양성 (p.89)","1915":"1910 여성 사경회 130명 운집 및 시험제 3등급 분반 정착 (p.89-90)","1925":"1920·1926 하계 사경회 및 1926 충북성경학원 상설화 (p.90)","1890s":"충청북도 일대 순회 권서인의 초기 문서 전도"},"notableQuote":{"text":"“청주 사경회에서는 누구나 원하는 반에 들어갈 수 없었다. 엄격한 입학시험을 치러 실력에 따라 초급·중급·고급으로 나뉘었으며, 장로 안수식이 사경회 한복판에서 거행되었다.”","source":"박영철(2026), 90쪽"}},{"id":"wonsan","name":"원산","nameHanja":"元山","coords":{"x":440,"y":255},"province":"함경남도","status":"secondary","badge":"1903 하디 회개 & 부흥의 도화선","thesisAnchor":"제Ⅳ장 제1절 「원산 사경회와 하디의 영적 회개」","thesisChapter":"제Ⅳ장 제1절 (45–50쪽)","thesisPages":"논문 45–50쪽, 140쪽","overview":"1903년 8월 남감리회 의료선교사 하디(R.A. Hardie)가 자신의 영적 무력함과 백인 우월주의를 동료 선교사와 조선인 신자들 앞에서 공개 회개함으로써 1907년 평양대부흥의 직접적인 영적 도화선이 된 역사적 성지입니다. 개항장 원산에서 시작된 성령의 불길은 개성, 서울을 거쳐 전국 사경회로 번져나갔습니다.","sakyunghoeHistory":{"title":"1903 원산 기도회 및 연합 사경회","period":"1903년 8월 기도회 → 1904년 원산 부흥 사경회","description":"선교사들의 소규모 기도 모임에서 하디의 회개가 폭발하여 조선인 사경회로 전이됨. 참회와 배상(토색한 돈을 돌려줌), 영적 갱신이 결합된 한국 특유의 부흥 사경회 원형을 창출함.","scale":"선교사 기도 모임에서 시작하여 원산 전역 수백 명으로 확산","characteristics":["하디 선교사의 자발적 공개 참회와 성령 체험","선교사와 조선인 신자 간의 인종적·신분적 장벽 철폐","1907년 평양대부흥으로 이어지는 도화선 역할","사경회에 부흥(Revival)의 영적 동력을 불어넣음"]},"chainModel":{"sakyunghoe":"원산 연합 사경회 및 회개 기도회","bibleWomen":"원산 토착 전도부인 및 여성 신자 참회 운동","bibleClass":"원산 성경 연구반 및 남감리회 성경학당","localChurch":"원산 상리교회, 광석교회 등","refluxSummary":"선교사의 회개가 평신도의 회개로 이어지고, 다시 전국 사경회의 순회 부흥 강사로 파견되어 거대한 부흥의 파도를 일으킨 시발점"},"keyPersons":[{"name":"하디","role":"남감리회 의료선교사 (R.A. Hardie)","action":"1903 원산 사경회에서 공개 회개, 1907 대부흥의 도화선 점화 (p.45-50)"},{"name":"화이트","role":"여성 선교사 (M.C. White)","action":"원산 기도 모임 제안자, 성령 강림 사경회 동역 (p.46)"}],"curriculum":{"levels":"기도 사경회 → 복음서 성령론 연구","subjects":["누가복음 기도론","요한일서 회개와 사랑","성령의 은사와 거룩한 삶"],"practicalAction":"과거 남을 속이거나 훔친 재산의 배상 및 공개 고백"},"presbyterianComparison":{"methodistAspect":"남감리회 하디의 성결(Holiness)과 완전한 성화 체험이 원동력","presbyterianAspect":"캐나다 장로회 선교사들과의 초교파 연합 기도회로 진행됨","contrastSummary":"웨슬리안 성화론의 결정적 체험이 교파를 초월하여 대부흥으로 확장됨 (논문 45–50쪽)","page":"45–50"},"foreignOriginAndInflow":{"originConcept":"케직 사경회(Keswick Convention)의 성결 운동","inflowRoute":"캐나다/미국 남감리회 → 원산항 개항장 선교 기지","indigenization":"서구 신학 이론이 아닌 선교사 자신의 솔직한 인종적 오만 회개를 통해 조선인 마음을 열음","page":"45–48"},"eraActivities":{"1903":"1903년 8월 하디 선교사의 극적 공개 회개 및 원산 부흥 발발 (p.45)","1908":"원산의 부흥 열기가 서울, 개성, 평양 사경회 주강사로 파송되며 확산","1915":"원산 루시여학교 및 남감리회 성경학당 안정적 발전","1925":"동해안 일대 성경 구역 중심지로서의 지속적 역할","1890s":"원산 개항장 남감리회 및 캐나다 장로회 초기 선교 스테이션 형성"},"notableQuote":{"text":"“성령께서 내게 임하셨을 때, 첫 번째 요구는 내 자신의 실패와 수치스러운 오만을 조선인 회중 앞에서 고백하라는 것이었다. 그것은 고통스러웠으나 진정한 부흥의 시작이었다.”","source":"R.A. Hardie, 『The Korea Mission Field』 (1907)"}},{"id":"jeolla","name":"전라(전주·광주)","nameHanja":"全羅","coords":{"x":345,"y":625},"province":"전라도","status":"secondary","badge":"10년 장기 커리큘럼 & 서면 시험","thesisAnchor":"제Ⅵ장 「감리교와 장로교 사경회의 비교사적 대조」","thesisChapter":"제Ⅵ장 (118–122쪽, 137–138쪽)","thesisPages":"논문 118–122쪽, 137–138쪽","overview":"미국 남장로교 선교부가 관할한 호남권의 대표 사경회 거점입니다. 전주 남성 사경회 600여 명(5등급 분반), 여성 사경회 4등급 분반 후 엄격한 서면 시험(Written exams)을 강제하였으며, 매티 테이트의 순회 성경반과 광주성경학원의 10년 장기 학제 과정을 통해 평신도를 준(準)신학자 수준으로 단련시켰습니다.","sakyunghoeHistory":{"title":"전남노회·전주지방 10년 과정 사경회","period":"1900년대 순회반 태동 → 1910s 10년 장기 학제화 → 1930s 대중화","description":"광주 주일 성경공부반이 14년 만에 1개에서 45개(2,900명)로 폭발함. 엄격한 서면 시험(Written examination)을 통과해야만 다음 학년으로 진급할 수 있는 학사 관리를 고수함.","scale":"전주 600명, 광주 구역 2,900명","characteristics":["10년에 걸친 방대한 단계별 신학 커리큘럼","진급을 위한 엄격한 서면 필기시험(Written Exam) 강제","매티 테이트 선교사의 헌신적 순회 여성 성경반","정 씨 부인(과로 소천) 등 토착 전도부인의 헌신"]},"chainModel":{"sakyunghoe":"전주·광주 대사경회 (서면 시험제)","bibleWomen":"정 씨 부인(전도부인), 평신도 조사 4인(김옥여·김윤찬 등)","bibleClass":"광주성경학원 10년 과정, 매티 테이트 순회 성경반","localChurch":"광주 선교부 관할 45개 개체 교회망","refluxSummary":"10년에 걸친 방대한 신학 커리큘럼과 엄격한 서면 시험을 통해 농촌 평신도를 준신학자 수준의 전도 인력으로 벼려낸 남장로교식 정통 모델"},"keyPersons":[{"name":"테이트","role":"미남장로회 여성 선교사 (Mattie Tate)","action":"호남 전역 순회 여성 성경반 개설 및 교재 집필 (p.118)"},{"name":"정 씨 부인","role":"토착 전도부인","action":"광활한 호남 평야를 순회하며 성경을 가르치다 과로 소천 (p.120)"},{"name":"김옥여","role":"평신도 조사","action":"4인의 조사 중 한 명으로 선교사 부재 시 교회 목양 (p.120)"}],"curriculum":{"levels":"1~10학년 10년 장기 코스 (서면 시험 합격 필수)","subjects":["신구약 정밀 주해","웨스트민스터 소요리문답","교회사·변증학","전도학"],"practicalAction":"호남 각 군면 순회 전도 및 45개 교회 설립"},"presbyterianComparison":{"methodistAspect":"감리교가 단기 집중과 성화 실천을 중시한 것과 뚜렷한 대비","presbyterianAspect":"남장로교는 10년 장기 과정과 서면 필기시험을 통해 교리적 정통성 확립","contrastSummary":"논문 제Ⅵ장의 핵심 비교 사례로서, 교리적 자립(장로교)과 사회적 성화(감리교)의 선명한 대비 (논문 137–138쪽)","page":"137–138"},"foreignOriginAndInflow":{"originConcept":"미국 남장로교(PCUS)의 정통 칼빈주의 성서 교육","inflowRoute":"군산·목포 개항장 입항 → 전주·광주 스테이션 개설","indigenization":"농민들이 한글을 깨친 후 한문 혼용 성경 시험을 치를 정도로 고도화된 학문적 열정으로 토착화","page":"120–122"},"eraActivities":{"1903":"매티 테이트 선교사의 순회 성경반 태동 (p.118)","1908":"평신도 조사 4인과 정 씨 부인의 호남 전역 사경회 인도 (p.120)","1915":"광주 주일 성경공부반 45개 2,900명 급증 및 10년 학제 확립 (p.120, 138)","1925":"서면 시험을 통과한 수백 명의 평신도 사역자 호남 전역 교회 목양","1890s":"7인의 선교사 호남 선교 개척 및 전주·나주 순회"},"notableQuote":{"text":"“남장로교의 사경회는 결코 가볍지 않았다. 10년간 매년 출석하여 서면 시험에 합격해야 졸업장을 주었으며, 이 혹독한 훈련을 거친 평신도들은 흔들리지 않는 교회의 반석이 되었다.”","source":"박영철(2026), 137–138쪽"}},{"id":"overseas_origin","name":"해외 기원(미국 샤토콰·선교본부)","nameHanja":"海外 起源·美 總會","coords":{"x":95,"y":95},"province":"미국(뉴욕·보스턴·테네시)","status":"origin","badge":"샤토콰(Chautauqua) & 무디 부흥운동","thesisAnchor":"제Ⅲ장 「사경회의 역사적 기원과 한국 전래」","thesisChapter":"제Ⅲ장 전체 (21–44쪽)","thesisPages":"논문 21–44쪽","overview":"1874년 미국 뉴욕 샤토콰 호수에서 감리교 존 빈센트(John H. Vincent)가 주일학교 교사 훈련을 위해 창안한 ‘샤토콰 운동(Chautauqua Movement)’과 무디(D.L. Moody)의 대중 부흥운동, 그리고 초기 감리교의 감리사 순회 제도(Quarterly Conference)가 결합된 사경회의 모태입니다. 한국 내한 선교사(아펜젤러, 스크랜턴, 하디, 존스 등)를 통해 제물포와 서울로 직접 유입되었습니다.","sakyunghoeHistory":{"title":"미국 샤토콰 성경 연구 및 감리사 분기 사경회","period":"1874년 샤토콰 창안 → 1880s 전미 확산 → 1885년 한국 유입","description":"휴양지 텐트 합숙을 통한 집중 성경 연구와 일반 교양·예술·과학을 아우른 평신도 계몽 운동. 한국에서는 이 모델이 농한기 합숙과 통회자복 기도 부흥회로 재창조됨.","scale":"미국 수백만 명 참여의 대중 교육 운동","characteristics":["존 빈센트 감리교 감독의 주일학교 교사 집중 훈련 창안","무디의 대중 도시 부흥 전도와 성경 강해 결합","선교사 훈련소 및 성서공회를 통한 해외 선교부 파송","한국 사경회의 3층 구조 및 커리큘럼의 원형 제공"]},"chainModel":{"sakyunghoe":"미국 샤토콰 하계 집회 및 감리교 순회 사경회","bibleWomen":"여성선교연합회(WFMS) 및 디코니스(여집사) 훈련","bibleClass":"샤토콰 독서 서클(CLSC) 4년 과정","localChurch":"미국 감리교회(MEC/MECS) 및 전 세계 선교지 파송","refluxSummary":"서구 문명의 기독교적 계몽 운동이 제물포와 서울을 거쳐 조선 민중의 자비량 성경 공부로 환류되며 한국적 토착화 완성"},"keyPersons":[{"name":"존 빈센트","role":"미감리교 감독","action":"1874 샤토콰 성경 연구 운동 창안, 평신도 훈련 체계 수립 (p.23)"},{"name":"D.L. 무디","role":"부흥운동가","action":"말씀 연구와 통회 자복 부흥회의 결합 모델 창출 (p.25)"},{"name":"스크랜턴 대부인","role":"WFMS 여성 선교사","action":"이화학당 및 서울 보구여관, 초기 여성 성경반 개척 (p.61)"}],"curriculum":{"levels":"샤토콰 리터러시 4년 과정 (CLSC)","subjects":["성서학","세계역사·문학","과학과 신앙","기독교 사회윤리"],"practicalAction":"평신도 자원봉사자 양성 및 해외 선교사 지원"},"presbyterianComparison":{"methodistAspect":"감리교 샤토콰는 문화·교육·신앙을 통합한 포용적 사회적 성화 지향","presbyterianAspect":"장로교는 칼빈주의 교리 문답과 성경 본문 자체의 축자적 연구에 집중","contrastSummary":"한국 사경회는 감리교 샤토콰의 입체적 교육성과 장로교의 엄격한 자립성을 창조적으로 융합함 (논문 21–44쪽)","page":"21–44"},"foreignOriginAndInflow":{"originConcept":"샤토콰 운동(Chautauqua) & 순회 감리사 사경회","inflowRoute":"뉴욕/보스턴 미감리회 선교본부 → 태평양 횡단 → 제물포 상륙(1885)","indigenization":"텐트 휴양 집회가 조선의 사랑방과 겨울 멍석 위 합숙으로 완벽히 토착화됨","page":"21–30"},"eraActivities":{"1903":"샤토콰 교재 번역 및 순회 교사 훈련법의 한국 도입","1908":"평양·선천 대사경회에서 샤토콰식 등급 분반 체계 만개","1915":"성서학원 4년 정규 학제화로 샤토콰 CLSC 과정의 제도적 안착","1925":"전국 2,344개 대중 사경회로 확장되어 샤토콰의 전민족적 계몽 구현","1890s":"1874 샤토콰 모델을 체험한 아펜젤러·스크랜턴이 한국 초기 성경반에 적용"},"notableQuote":{"text":"“한국의 사경회는 미국의 샤토콰와 닮았으면서도 훨씬 더 뜨겁고 헌신적이다. 그들은 피크닉을 온 것이 아니라 생명의 말씀을 먹기 위해 모든 것을 바쳐 모였다.”","source":"George Heber Jones, 『The Korea Mission Field』 (1908)"}}];
+  let currentEraId = '1908';
+  let currentRegionId = 'pyongyang';
+
+  const cardStages = { sakyunghoe: 0, region: 0, bible_women: 0, regional_education: 0, bible_class: 0 };
+
+  function renderPillars() {
+    const container = document.getElementById('pillars-container');
+    container.innerHTML = '';
+    let completedCount = 0;
+
+    pillarsData.forEach(p => {
+      const stage = cardStages[p.id] || 0;
+      if (stage === 2) completedCount++;
+      const isFlipped = stage > 0;
+      const isGlowing = stage === 2;
+
+      const card = document.createElement('div');
+      card.className = 'card ' + (isFlipped ? 'flipped ' : '') + (isGlowing ? 'glowing' : '');
+      card.onclick = () => {
+        if (cardStages[p.id] === 0) cardStages[p.id] = 1;
+        else if (cardStages[p.id] === 1) cardStages[p.id] = 2;
+        else cardStages[p.id] = 1;
+        renderPillars();
+      };
+
+      card.innerHTML = `
+        <div class="card-inner">
+          <div class="card-front">
+            <div>
+              <span class="badge">핵심 기제</span>
+              <div class="card-title">${p.titleKo} (${p.titleHanja})</div>
+              <p style="font-size: 11px; color: #fbbf24; margin-top: 4px;">${p.subtitle}</p>
+            </div>
+            <div style="font-size: 12px; color: #d4d4d8; margin: auto 0;">
+              <p>${p.frontSummary}</p>
+              <ul style="margin-top: 8px; padding-left: 14px; font-size: 11px; color: #a1a1aa;">
+                ${p.frontBullets.map(b => '<li style="margin-bottom: 2px;">' + b + '</li>').join('')}
+              </ul>
+            </div>
+            <div style="text-align: center; font-size: 11px; color: #fbbf24;">클릭하여 뒤집기 ↻</div>
+          </div>
+          <div class="card-back">
+            <div>
+              <span class="badge">${stage === 2 ? '심화 점화' : '1차 탐색'}</span>
+              <div style="font-weight: bold; color: #fef08a; margin-top: 6px;">${stage === 2 ? p.back2Title : p.back1Title}</div>
+            </div>
+            <div style="font-size: 11px; color: #e4e4e7; margin: 10px 0;">
+              <p>${stage === 2 ? p.back2Content : p.back1Content}</p>
+              <div style="margin-top: 8px; padding: 6px; background: rgba(0,0,0,0.4); border-left: 2px solid #f59e0b; font-style: italic;">
+                ${stage === 2 ? p.back2Quote : p.back1Quote}
+              </div>
+            </div>
+            <div style="font-size: 10px; color: #fbbf24; text-align: center;">텍스트 클릭 시 내용 전환 ↻</div>
+          </div>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+
+    document.getElementById('glow-count').innerText = completedCount + ' / 5 완료';
+  }
+
+  function unlockAllPillars() {
+    Object.keys(cardStages).forEach(k => cardStages[k] = 2);
+    renderPillars();
+  }
+
+  const corePersonsList = ["최병헌","아펜젤러","M.F. 스크랜턴","김세지","노블 부인","G.H. 존스 부부","홍승하","마펫","스왈런","맥큔","J.Z. 무어","M. 베스트","한국인 여성 교사 13인","체이스","제인 사무엘","키언스(컨스)","누 씨(Nu Ssi)","김선두 목사","샤프","스네이블리","재령 전도부인","버딕","윤성렬","홍병선","곽안련","민노아","부해리","하디","매티 테이트","하리슨","전라 조사 4인","정 씨 부인","백사겸","예순화","W.J.·R.S. 홀"];
+
+  function renderQuickPersons() {
+    const bar = document.getElementById('quick-persons-bar');
+    if (!bar) return;
+    bar.innerHTML = corePersonsList.map(p => {
+      const isChoi = p === '최병헌';
+      return '<button type="button" data-person="' + p + '" style="background: ' + (isChoi ? '#f59e0b' : '#27272a') + '; color: ' + (isChoi ? '#000' : '#fef08a') + '; border: 1px solid ' + (isChoi ? '#f59e0b' : '#3f3f46') + '; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer;">👤 ' + p + '</button>';
+    }).join('');
+  }
+
+  function renderRelations(list = relationsData) {
+    const tbody = document.getElementById('relations-body');
+    if (!tbody) return;
+    tbody.innerHTML = list.map((r, i) => {
+      const isA_Person = Boolean(personProfiles[r.itemA]);
+      const isB_Person = Boolean(personProfiles[r.itemB]);
+
+      const itemA_Html = isA_Person 
+        ? '<button type="button" data-person="' + r.itemA + '" style="background: rgba(245,158,11,0.18); border: 1px solid rgba(245,158,11,0.45); color: #fef08a; padding: 2px 7px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: bold;">👤 ' + r.itemA + ' <span style="font-size: 9px; opacity: 0.85;">인물소개 ↗</span></button>' 
+        : r.itemA;
+      const itemB_Html = isB_Person 
+        ? '<button type="button" data-person="' + r.itemB + '" style="background: rgba(245,158,11,0.18); border: 1px solid rgba(245,158,11,0.45); color: #fef08a; padding: 2px 7px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: bold;">👤 ' + r.itemB + ' <span style="font-size: 9px; opacity: 0.85;">인물소개 ↗</span></button>' 
+        : r.itemB;
+
+      return '<tr>' +
+        '<td style="text-align: center; color: #71717a;">' + (i+1) + '</td>' +
+        '<td style="color: #fbbf24; font-weight: bold;">' + r.category + '</td>' +
+        '<td>' + itemA_Html + '</td>' +
+        '<td>' + itemB_Html + '</td>' +
+        '<td style="color: #d4d4d8;">' + r.description + '</td>' +
+        '<td style="text-align: center; color: #f59e0b; font-family: monospace;">p.' + r.page + '</td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  function filterRelations() {
+    const q = document.getElementById('relation-search').value.toLowerCase();
+    const filtered = relationsData.filter(r => 
+      r.itemA.toLowerCase().includes(q) ||
+      r.itemB.toLowerCase().includes(q) ||
+      r.description.toLowerCase().includes(q) ||
+      r.page.includes(q)
+    );
+    renderRelations(filtered);
+  }
+
+  function openPersonModal(name) {
+    const p = personProfiles[name] || {
+      name: name,
+      role: '사경회 평신도 지도자',
+      region: '선교지',
+      keyAction: '사경회 및 평신도 운동에 참여한 인물입니다.',
+      historicalSignificance: '기층 평신도 사역자로서 지역 교회의 자생적 발전에 기여함.',
+      thesisQuote: '',
+      pages: '본문 수록'
+    };
+
+    document.getElementById('modal-person-name').innerText = p.name + (p.nameHanja ? ' (' + p.nameHanja + ')' : '');
+    document.getElementById('modal-person-role').innerText = p.role + ' · ' + p.region;
+    document.getElementById('modal-person-action').innerText = p.keyAction;
+    document.getElementById('modal-person-sig').innerText = p.historicalSignificance;
+    if (p.thesisQuote) {
+      document.getElementById('modal-person-quote').innerText = p.thesisQuote;
+      document.getElementById('modal-person-quote-box').style.display = 'block';
+    } else {
+      document.getElementById('modal-person-quote-box').style.display = 'none';
+    }
+    document.getElementById('modal-person-pages').innerText = '논문 수록 쪽수: p.' + p.pages;
+
+    document.getElementById('person-modal').style.display = 'flex';
+  }
+
+  function closePersonModal() {
+    document.getElementById('person-modal').style.display = 'none';
+  }
+
+  // Network SVG Graph rendering
+  function initNetworkGraph() {
+    const width = 1000, height = 680;
+    const cx = width / 2, cy = height / 2;
+    const all = [...nodesData, ...keywordsData];
+
+    // Compute coordinates
+    const hubs = all.filter(n => n.type === 'hub');
+    hubs.forEach((h, i) => {
+      const ang = (i / hubs.length) * 2 * Math.PI - Math.PI / 2;
+      h.x = cx + Math.cos(ang) * 75;
+      h.y = cy + Math.sin(ang) * 75;
+    });
+
+    const regions = all.filter(n => n.type === 'region');
+    regions.forEach((r, i) => {
+      const ang = (i / regions.length) * 2 * Math.PI - Math.PI / 2;
+      r.x = cx + Math.cos(ang) * 200;
+      r.y = cy + Math.sin(ang) * 180;
+    });
+
+    const keywords = all.filter(n => n.type === 'keyword');
+    keywords.forEach((k, i) => {
+      const ang = (i / keywords.length) * 2 * Math.PI - Math.PI / 2;
+      k.x = cx + Math.cos(ang) * 310;
+      k.y = cy + Math.sin(ang) * 270;
+    });
+
+    const persons = all.filter(n => n.type === 'person');
+    persons.forEach((p, i) => {
+      const ang = (i / persons.length) * 2 * Math.PI - Math.PI / 2;
+      p.x = cx + Math.cos(ang) * 420;
+      p.y = cy + Math.sin(ang) * 320;
+    });
+
+    const nodeMap = {};
+    all.forEach(n => nodeMap[n.id] = n);
+
+    // Draw guideline concentric circles on pure white background
+    const rootGroup = document.getElementById('svg-root');
+    let guidesGroup = document.getElementById('svg-guides');
+    if (!guidesGroup) {
+      guidesGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      guidesGroup.id = 'svg-guides';
+      rootGroup.insertBefore(guidesGroup, document.getElementById('svg-edges'));
+    }
+    guidesGroup.innerHTML = '<circle cx="' + cx + '" cy="' + cy + '" r="75" fill="none" stroke="#e2e8f0" stroke-width="1.5" stroke-dasharray="4 4"></circle>' +
+      '<circle cx="' + cx + '" cy="' + cy + '" r="200" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="5 5"></circle>' +
+      '<circle cx="' + cx + '" cy="' + cy + '" r="310" fill="none" stroke="#a7f3d0" stroke-width="1.5" stroke-dasharray="5 5" opacity="0.8"></circle>' +
+      '<circle cx="' + cx + '" cy="' + cy + '" r="420" fill="none" stroke="#ddd6fe" stroke-width="1.5" stroke-dasharray="6 6" opacity="0.8"></circle>';
+
+    // Draw edges for all 224 relations
+    const edgesGroup = document.getElementById('svg-edges');
+    edgesGroup.innerHTML = '';
+    relationsData.forEach(rel => {
+      // Find matching source & target
+      const s = all.find(n => n.label === rel.itemA || n.id === rel.itemA);
+      const t = all.find(n => n.label === rel.itemB || n.id === rel.itemB);
+      if (s && t && s.x && t.x) {
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', s.x);
+        line.setAttribute('y1', s.y);
+        line.setAttribute('x2', t.x);
+        line.setAttribute('y2', t.y);
+        const isChain = rel.category.includes('사슬') || rel.category.includes('사경회');
+        const isKeyword = rel.category.includes('핵심어');
+        const isPersonRegion = rel.category.includes('인물↔지역');
+        const isPersonPerson = rel.category.includes('인물↔인물');
+
+        let strokeColor = '#64748b';
+        let strokeW = '1.6';
+        let strokeOp = '0.7';
+
+        if (isChain) {
+          strokeColor = '#dc2626';
+          strokeW = '2.4';
+          strokeOp = '0.95';
+          line.setAttribute('stroke-dasharray', '5 3');
+        } else if (isKeyword) {
+          strokeColor = '#059669';
+          strokeW = '1.7';
+          strokeOp = '0.75';
+        } else if (isPersonRegion) {
+          strokeColor = '#2563eb';
+          strokeW = '1.7';
+          strokeOp = '0.75';
+        } else if (isPersonPerson) {
+          strokeColor = '#7c3aed';
+          strokeW = '1.8';
+          strokeOp = '0.75';
+        }
+
+        line.setAttribute('stroke', strokeColor);
+        line.setAttribute('stroke-width', strokeW);
+        line.setAttribute('stroke-opacity', strokeOp);
+        edgesGroup.appendChild(line);
+      }
+    });
+
+    // Draw nodes
+    const nodesGroup = document.getElementById('svg-nodes');
+    nodesGroup.innerHTML = '';
+    all.forEach(n => {
+      if (!n.x) return;
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.setAttribute('transform', 'translate(' + n.x + ',' + n.y + ')');
+      g.style.cursor = 'pointer';
+      g.onclick = () => {
+        document.getElementById('sidebar-title').innerText = n.label + (n.nameHanja ? ' (' + n.nameHanja + ')' : '');
+        const typeStr = n.type === 'hub' ? '4대 핵심 구조 허브' : n.type === 'region' ? '선교 거점 지역' : n.type === 'person' ? (n.isBibleWoman ? '전도부인(Bible Woman)' : '핵심 인물') : '분석 핵심어';
+        document.getElementById('sidebar-content').innerHTML = 
+          '<p style="margin-bottom: 8px;"><strong>유형:</strong> ' + typeStr + '</p>' +
+          '<p style="margin-bottom: 8px;">' + n.desc + '</p>' +
+          '<p style="color: #b45309; font-weight: bold; font-family: monospace;">논문 근거 쪽수: p.' + n.page + '</p>' +
+          (personProfiles[n.label] ? '<button type="button" data-person="' + n.label + '" style="margin-top: 10px; width: 100%; padding: 8px; background: #f59e0b; color: #000; font-weight: bold; border: none; border-radius: 6px; cursor: pointer;">👤 인물 심층 프로필 및 논문 인용 열기</button>' : '');
+      };
+
+      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      const r = n.type === 'hub' ? 18 : (n.type === 'region' ? 14 : (n.type === 'keyword' ? 10 : 8.5));
+      const col = n.type === 'hub' ? '#f59e0b' : (n.type === 'region' ? '#0284c7' : (n.isBibleWoman ? '#ec4899' : (n.type === 'person' ? '#8b5cf6' : '#10b981')));
+      circle.setAttribute('r', r);
+      circle.setAttribute('fill', col);
+      circle.setAttribute('stroke', '#ffffff');
+      circle.setAttribute('stroke-width', '2.5');
+      g.appendChild(circle);
+
+      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      text.setAttribute('y', r + 12);
+      text.setAttribute('text-anchor', 'middle');
+      text.setAttribute('fill', '#0f172a');
+      text.setAttribute('stroke', '#ffffff');
+      text.setAttribute('stroke-width', '3.5px');
+      text.setAttribute('paint-order', 'stroke');
+      text.setAttribute('stroke-linejoin', 'round');
+      text.setAttribute('font-weight', '700');
+      text.setAttribute('font-size', n.type === 'hub' ? '12' : (n.type === 'region' ? '10.5' : '9'));
+      text.textContent = n.label;
+      g.appendChild(text);
+
+      nodesGroup.appendChild(g);
+    });
+  }
+
+  function resetGraphView() {
+    initNetworkGraph();
+  }
+
+  function renderChains() {
+    const container = document.getElementById('chains-container');
+    container.innerHTML = chainsData.map(c => `
+      <div style="background: #141722; border: 1px solid #3f3f46; border-radius: 12px; padding: 18px; margin-bottom: 16px;">
+        <h3 style="color: #fef08a; margin-bottom: 12px; font-family: 'Noto Serif KR', serif;">${c.region} ${c.isSecondary ? '(보조 지역)' : ''}</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; font-size: 11px;">
+          <div style="background: #1f2230; padding: 12px; border-radius: 8px;">
+            <strong style="color: #fbbf24;">1. 사경회:</strong> ${c.sakyunghoe.title}
+            <p style="margin-top: 4px; color: #a1a1aa;">${c.sakyunghoe.description} (p.${c.sakyunghoe.page})</p>
+          </div>
+          <div style="background: #1f2230; padding: 12px; border-radius: 8px;">
+            <strong style="color: #f43f5e;">2. 전도부인·지도자:</strong> ${c.bibleWomenAndLeaders.title}
+            <p style="margin-top: 4px; color: #a1a1aa;">${c.bibleWomenAndLeaders.description} (p.${c.bibleWomenAndLeaders.page})</p>
+          </div>
+          <div style="background: #1f2230; padding: 12px; border-radius: 8px;">
+            <strong style="color: #c084fc;">3. 성경반:</strong> ${c.bibleClassAndInstitute.title}
+            <p style="margin-top: 4px; color: #a1a1aa;">${c.bibleClassAndInstitute.description} (p.${c.bibleClassAndInstitute.page})</p>
+          </div>
+          <div style="background: #1f2230; padding: 12px; border-radius: 8px;">
+            <strong style="color: #34d399;">4. 지역교회:</strong> ${c.localChurch.title}
+            <p style="margin-top: 4px; color: #a1a1aa;">${c.localChurch.description} (p.${c.localChurch.page})</p>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderComparison() {
+    const container = document.getElementById('comparison-container');
+    container.innerHTML = comparisonData.map(item => `
+      <div style="background: #141722; border: 1px solid #3f3f46; border-radius: 12px; padding: 18px; margin-bottom: 16px;">
+        <h3 style="color: #fef08a; margin-bottom: 10px; font-family: 'Noto Serif KR', serif;">${item.category}</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; font-size: 11px;">
+          <div style="background: rgba(120,53,15,0.25); border: 1px solid rgba(245,158,11,0.3); padding: 12px; border-radius: 8px;">
+            <strong style="color: #fbbf24; font-size: 12px;">감리교: ${item.methodist.title}</strong>
+            <div style="margin-top: 6px; color: #e2e8f0;">${item.methodist.points.map(p => '• ' + p).join('<br>')}</div>
+          </div>
+          <div style="background: rgba(14,116,144,0.2); border: 1px solid rgba(56,189,248,0.3); padding: 12px; border-radius: 8px;">
+            <strong style="color: #38bdf8; font-size: 12px;">장로교: ${item.presbyterian.title}</strong>
+            <div style="margin-top: 6px; color: #e2e8f0;">${item.presbyterian.points.map(p => '• ' + p).join('<br>')}</div>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function setTimelineEra(eraId) {
+    currentEraId = eraId;
+    renderTimelineEraControls();
+    renderTimelineSvgMap();
+  }
+
+  function selectTimelineRegion(regionId) {
+    currentRegionId = regionId;
+    const nameEl = document.getElementById('timelinemap-current-name');
+    const r = regionalChronologyData.find(item => item.id === regionId);
+    if (nameEl && r) nameEl.innerText = r.name;
+    renderTimelineRegionChips();
+    renderTimelineSvgMap();
+    renderRegionDetailPanel(regionId);
+  }
+
+  function renderTimelineEraControls() {
+    const eraBtnContainer = document.getElementById('timelinemap-era-buttons');
+    if (eraBtnContainer) {
+      eraBtnContainer.innerHTML = erasData.map(e => {
+        const isActive = e.id === currentEraId;
+        const is1908 = e.id === '1908';
+        return '<button type="button" class="era-btn ' + (isActive ? 'active' : '') + '" data-era="' + e.id + '">' +
+          (is1908 ? '🔥 ' : '') + e.name + ' <span style="font-size:10px; opacity:0.85;">(' + e.yearLabel + ')</span>' +
+        '</button>';
+      }).join('');
+    }
+
+    const bannerContainer = document.getElementById('timelinemap-era-banner');
+    const activeEra = erasData.find(e => e.id === currentEraId) || erasData[0];
+    if (bannerContainer && activeEra) {
+      bannerContainer.innerHTML = 
+        '<div>' +
+          '<span style="background:#f59e0b; color:#000; font-weight:bold; padding:2px 8px; border-radius:4px; font-size:11px; margin-right:8px;">' + activeEra.period + '</span>' +
+          '<strong style="color:#fef08a;">' + activeEra.theme + '</strong>' +
+          '<span style="color:#a1a1aa; margin:0 8px;">|</span>' +
+          '<span style="color:#e2e8f0;">' + activeEra.summary + '</span>' +
+        '</div>' +
+        '<span style="font-family:monospace; color:#f59e0b; font-size:11px;">' + activeEra.thesisAnchor + '</span>' +
+        (activeEra.personChainNetwork ? 
+          '<div style="width:100%; margin-top:8px; padding-top:6px; border-top:1px solid rgba(245,158,11,0.25); color:#fca5a5; font-size:11.5px; line-height:1.5;">' +
+            '<strong style="color:#ef4444; margin-right:6px;">🔗 ' + activeEra.name + ' 인물·사경회 연결망:</strong>' +
+            '<span>' + activeEra.personChainNetwork + '</span>' +
+          '</div>' : '');
+    }
+  }
+
+  function renderTimelineRegionChips() {
+    const chipsContainer = document.getElementById('timelinemap-region-chips');
+    if (!chipsContainer) return;
+    chipsContainer.innerHTML = regionalChronologyData.map(r => {
+      const isSelected = r.id === currentRegionId;
+      return '<button type="button" class="region-chip ' + (isSelected ? 'active' : '') + '" data-region="' + r.id + '">' +
+        r.name + ' <span style="font-size:9.5px; opacity:0.8;">(' + r.badge + ')</span>' +
+      '</button>';
+    }).join('');
+  }
+
+  function renderRegionDetailPanel(regId) {
+    const r = regionalChronologyData.find(item => item.id === regId);
+    const container = document.getElementById('timelinemap-detail-box');
+    if (!r || !container) return;
+
+    let personsHtml = r.keyPersons.map(p => 
+      '<button type="button" data-person="' + p.name + '" style="padding:4px 8px; border-radius:6px; background:#1e293b; color:#fef08a; border:1px solid #334155; font-size:11px; cursor:pointer; font-weight:bold; margin-right:4px; margin-bottom:4px;">👤 ' + p.name + ' <span style="font-size:9px; color:#94a3b8;">(' + p.role + ')</span></button>'
+    ).join('');
+
+    let characteristicsHtml = r.sakyunghoeHistory.characteristics.map(c => 
+      '<li style="margin-bottom:3px;">✔ ' + c + '</li>'
+    ).join('');
+
+    let erasHtml = Object.entries(r.eraActivities).map(([eraK, desc]) => 
+      '<div style="display:flex; gap:8px; margin-bottom:4px; font-size:11px; background:#181b28; padding:4px 8px; border-radius:4px;"><strong style="color:#f59e0b; width:45px; flex-shrink:0;">' + eraK + '</strong><span style="color:#cbd5e1;">' + desc + '</span></div>'
+    ).join('');
+
+    container.innerHTML = 
+      '<div style="border-bottom:1px solid #334155; padding-bottom:10px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:flex-start;">' +
+        '<div>' +
+          '<span style="background:rgba(245,158,11,0.2); color:#fef08a; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:bold;">' + r.badge + '</span>' +
+          '<h3 style="font-size:22px; color:#fff; font-family:serif; margin-top:4px;">' + r.name + ' <span style="font-size:14px; color:#94a3b8; font-weight:normal;">(' + r.nameHanja + ')</span></h3>' +
+        '</div>' +
+        '<span style="font-family:monospace; color:#f59e0b; font-size:11px; background:#1e293b; padding:3px 8px; border-radius:4px;">' + r.thesisPages + '</span>' +
+      '</div>' +
+
+      '<div style="background:#1e293b; padding:10px; border-radius:8px; margin-bottom:12px; font-size:11px; color:#cbd5e1; border-left:3px solid #f59e0b;">' +
+        '<strong style="color:#fef08a; display:block; margin-bottom:3px;">' + r.thesisChapter + '</strong>' +
+        '<p>' + r.overview + '</p>' +
+      '</div>' +
+
+      '<div style="margin-bottom:12px;">' +
+        '<h4 style="font-size:12px; color:#fbbf24; margin-bottom:6px; font-weight:bold;">1. 사경회 역사 및 운영 형태 (논문 Ⅳ-3장)</h4>' +
+        '<div style="background:#131622; padding:10px; border-radius:8px; border:1px solid #27272a; font-size:11px;">' +
+          '<strong style="color:#fff;">' + r.sakyunghoeHistory.title + ' (' + r.sakyunghoeHistory.period + ')</strong>' +
+          '<p style="margin:4px 0 6px 0; color:#a1a1aa;">' + r.sakyunghoeHistory.description + '</p>' +
+          '<ul style="list-style:none; padding:0; color:#cbd5e1; font-size:10.5px;">' + characteristicsHtml + '</ul>' +
+        '</div>' +
+      '</div>' +
+
+      '<div style="margin-bottom:12px;">' +
+        '<h4 style="font-size:12px; color:#f87171; margin-bottom:6px; font-weight:bold;">2. 4단계 자생적 사슬 환류 구조 (논문 3쪽 모델)</h4>' +
+        '<div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; font-size:10.5px;">' +
+          '<div style="background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.3); padding:8px; border-radius:6px;"><strong style="color:#fbbf24;">① 사경회:</strong><br>' + r.chainModel.sakyunghoe + '</div>' +
+          '<div style="background:rgba(244,63,94,0.15); border:1px solid rgba(244,63,94,0.3); padding:8px; border-radius:6px;"><strong style="color:#fb7185;">② 전도부인·지도자:</strong><br>' + r.chainModel.bibleWomen + '</div>' +
+          '<div style="background:rgba(192,132,252,0.15); border:1px solid rgba(192,132,252,0.3); padding:8px; border-radius:6px;"><strong style="color:#c084fc;">③ 성경반:</strong><br>' + r.chainModel.bibleClass + '</div>' +
+          '<div style="background:rgba(52,211,153,0.15); border:1px solid rgba(52,211,153,0.3); padding:8px; border-radius:6px;"><strong style="color:#34d399;">④ 지역교회:</strong><br>' + r.chainModel.localChurch + '</div>' +
+        '</div>' +
+        '<p style="font-size:10px; color:#a1a1aa; margin-top:5px; font-style:italic;">↺ 환류: ' + r.chainModel.refluxSummary + '</p>' +
+      '</div>' +
+
+      '<div style="margin-bottom:12px;">' +
+        '<h4 style="font-size:12px; color:#c084fc; margin-bottom:6px; font-weight:bold;">3. 활동 인물 네트워크 (클릭 시 인물 팝업 연동)</h4>' +
+        '<div style="display:flex; flex-wrap:wrap; gap:4px;">' + personsHtml + '</div>' +
+      '</div>' +
+
+      '<div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; font-size:10.5px;">' +
+        '<div style="background:#131622; padding:8px; border-radius:6px; border:1px solid #27272a;">' +
+          '<strong style="color:#fbbf24;">교과 체계:</strong><br>' +
+          '• ' + r.curriculum.levels + '<br>' +
+          '• ' + r.curriculum.subjects.join(', ') +
+        '</div>' +
+        '<div style="background:#131622; padding:8px; border-radius:6px; border:1px solid #27272a;">' +
+          '<strong style="color:#38bdf8;">장로교 비교 (Ⅵ장):</strong><br>' +
+          '• 감리교: ' + r.presbyterianComparison.methodistAspect + '<br>' +
+          '• 장로교: ' + r.presbyterianComparison.presbyterianAspect +
+        '</div>' +
+      '</div>' +
+
+      (r.otherChapterCases ? 
+        '<div style="background:rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.3); padding:8px; border-radius:6px; margin-bottom:12px; font-size:10.5px;">' +
+          '<strong style="color:#fbbf24;">기타 장 발전 사례: ' + r.otherChapterCases.title + ' (' + r.otherChapterCases.chapter + ', p.' + r.otherChapterCases.page + ')</strong>' +
+          '<p style="margin-top:3px; color:#cbd5e1;">' + r.otherChapterCases.description + '</p>' +
+        '</div>' : '') +
+
+      '<div style="background:rgba(124,58,237,0.15); border:1px solid rgba(124,58,237,0.3); padding:8px; border-radius:6px; margin-bottom:12px; font-size:10.5px;">' +
+        '<strong style="color:#c084fc;">해외 기원 및 비교·유입 (Ⅲ장):</strong><br>' +
+        '• 모태: ' + r.foreignOriginAndInflow.originConcept + '<br>' +
+        '• 경로: ' + r.foreignOriginAndInflow.inflowRoute + '<br>' +
+        '• 토착화: ' + r.foreignOriginAndInflow.indigenization +
+      '</div>' +
+
+      '<div style="margin-bottom:12px;">' +
+        '<h4 style="font-size:11px; color:#a1a1aa; margin-bottom:4px; font-weight:bold;">시대별 전개 연표</h4>' +
+        erasHtml +
+      '</div>' +
+
+      '<div style="background:#18181b; border-left:3px solid #f59e0b; padding:8px; font-style:italic; font-size:10.5px; color:#fef08a; font-family:serif;">' +
+        '<p>' + r.notableQuote.text + '</p>' +
+        '<span style="font-size:9.5px; color:#a1a1aa; display:block; text-align:right; margin-top:3px; font-style:normal;">— ' + r.notableQuote.source + '</span>' +
+      '</div>';
+  }
+
+  function renderTimelineSvgMap() {
+    const linksGroup = document.getElementById('off-map-links');
+    const nodesGroup = document.getElementById('off-map-nodes');
+    if (!linksGroup || !nodesGroup) return;
+
+    const activeEra = erasData.find(e => e.id === currentEraId) || erasData[0];
+    const activeRegionIds = new Set(activeEra.activeRegions);
+
+    // Draw Links
+    linksGroup.innerHTML = '';
+    activeEra.activeLinks.forEach((link, idx) => {
+      const fromR = regionalChronologyData.find(r => r.id === link.from);
+      const toR = regionalChronologyData.find(r => r.id === link.to);
+      if (!fromR || !toR) return;
+
+      const isChain = link.type === 'chain';
+      const isRevival = link.type === 'revival';
+      const strokeColor = isChain ? '#dc2626' : (isRevival ? '#d97706' : '#0284c7');
+      const markerId = isChain ? 'url(#off-arrow-chain)' : (isRevival ? 'url(#off-arrow-revival)' : 'url(#off-arrow-inflow)');
+
+      const midX = (fromR.coords.x + toR.coords.x) / 2 + (idx % 2 === 0 ? 20 : -20);
+      const midY = (fromR.coords.y + toR.coords.y) / 2 + (idx % 2 === 0 ? -15 : 15);
+
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', 'M ' + fromR.coords.x + ' ' + fromR.coords.y + ' Q ' + midX + ' ' + midY + ' ' + toR.coords.x + ' ' + toR.coords.y);
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke', strokeColor);
+      path.setAttribute('stroke-width', isChain ? '2.8' : '2');
+      if (isChain) path.setAttribute('stroke-dasharray', '6 4');
+      else if (isRevival) path.setAttribute('stroke-dasharray', '5 3');
+      path.setAttribute('stroke-opacity', '0.85');
+      path.setAttribute('marker-end', markerId);
+      linksGroup.appendChild(path);
+    });
+
+    // Draw Nodes
+    nodesGroup.innerHTML = '';
+    regionalChronologyData.filter(r => r.id !== 'overseas_origin').forEach(region => {
+      const isSelected = region.id === currentRegionId;
+      const isActiveInEra = activeRegionIds.has(region.id);
+      const isPrimary = region.status === 'primary';
+      const radius = isPrimary ? 13 : 11;
+      const nodeColor = isPrimary ? '#f59e0b' : '#0284c7';
+
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.setAttribute('transform', 'translate(' + region.coords.x + ',' + region.coords.y + ')');
+      g.style.cursor = 'pointer';
+      g.onclick = () => selectTimelineRegion(region.id);
+
+      if (isSelected || (isActiveInEra && currentEraId !== 'all')) {
+        const ring = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        ring.setAttribute('r', radius + 7);
+        ring.setAttribute('fill', 'none');
+        ring.setAttribute('stroke', isSelected ? '#d97706' : '#f59e0b');
+        ring.setAttribute('stroke-width', '2.5');
+        ring.setAttribute('stroke-dasharray', '4 2');
+        g.appendChild(ring);
+      }
+
+      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      circle.setAttribute('r', radius);
+      circle.setAttribute('fill', nodeColor);
+      circle.setAttribute('stroke', '#ffffff');
+      circle.setAttribute('stroke-width', '2.5');
+      g.appendChild(circle);
+
+      const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      dot.setAttribute('r', '4');
+      dot.setAttribute('fill', '#ffffff');
+      g.appendChild(dot);
+
+      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      text.setAttribute('y', radius + 14);
+      text.setAttribute('text-anchor', 'middle');
+      text.setAttribute('fill', isSelected ? '#b45309' : '#0f172a');
+      text.setAttribute('stroke', '#ffffff');
+      text.setAttribute('stroke-width', '3.5px');
+      text.setAttribute('paint-order', 'stroke');
+      text.setAttribute('stroke-linejoin', 'round');
+      text.setAttribute('font-weight', '800');
+      text.setAttribute('font-size', isPrimary ? '12' : '11');
+      text.textContent = region.name;
+      g.appendChild(text);
+
+      nodesGroup.appendChild(g);
+    });
+  }
+
+  function initTimelineMap() {
+    renderTimelineEraControls();
+    renderTimelineRegionChips();
+    renderTimelineSvgMap();
+    renderRegionDetailPanel(currentRegionId);
+  }
+
+  function showTab(tabName, clickedBtn) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
+    const target = document.getElementById('tab-' + tabName);
+    if (target) target.classList.add('active');
+    const navBtn = clickedBtn || document.querySelector('nav button[data-tab="' + tabName + '"]');
+    if (navBtn) navBtn.classList.add('active');
+    if (tabName === 'network') {
+      setTimeout(initNetworkGraph, 50);
+    } else if (tabName === 'timelinemap') {
+      setTimeout(initTimelineMap, 50);
+    }
+  }
+
+  // Global listener for person profile, era, and region buttons
+  document.addEventListener('click', function(e) {
+    const personBtn = e.target.closest('[data-person]');
+    if (personBtn) {
+      const pName = personBtn.getAttribute('data-person');
+      if (pName) openPersonModal(pName);
+      return;
+    }
+    const eraBtn = e.target.closest('[data-era]');
+    if (eraBtn) {
+      const eraId = eraBtn.getAttribute('data-era');
+      if (eraId) setTimelineEra(eraId);
+      return;
+    }
+    const regionBtn = e.target.closest('[data-region]');
+    if (regionBtn) {
+      const regId = regionBtn.getAttribute('data-region');
+      if (regId) selectTimelineRegion(regId);
+      return;
+    }
+  });
+
+  window.setTimelineEra = setTimelineEra;
+  window.selectTimelineRegion = selectTimelineRegion;
+  window.showTab = showTab;
+  window.openPersonModal = openPersonModal;
+  window.closePersonModal = closePersonModal;
+
+  function downloadCSV() {
+    const BOM = '\uFEFF';
+    const headers = ['구분', '항목A', '항목B', '관계설명', '논문_쪽수'];
+    const rows = relationsData.map(r => ['"' + r.category + '"', '"' + r.itemA + '"', '"' + r.itemB + '"', '"' + r.description.replace(/"/g, '""') + '"', '"' + r.page + '"']);
+    const csvContent = BOM + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = '한국_감리교_사경회_224관계망_데이터셋.csv';
+    a.click();
+  }
+
+  renderPillars();
+  renderQuickPersons();
+  renderRelations();
+  renderChains();
+  renderComparison();
+  initNetworkGraph();
+  initTimelineMap();
+</script>
+</body>
+</html>

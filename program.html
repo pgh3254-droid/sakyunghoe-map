@@ -291,25 +291,32 @@
 
         <div style="position: relative; width: 100%; min-height: 620px;">
           <!-- Prominent Top-Left Legend Overlay (사경회 연결선 의미 안내) -->
-          <div style="position: absolute; top: 12px; left: 12px; z-index: 1000; max-width: 270px; background: rgba(255, 255, 255, 0.95); border: 1px solid #cbd5e1; border-radius: 10px; padding: 8px 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.15); font-family: 'Noto Serif KR', serif; font-size: 10.5px; line-height: 1.35; color: #1e293b; pointer-events: auto;">
-            <div style="font-weight: bold; color: #b45309; margin-bottom: 5px; font-size: 11.5px; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px; display: flex; align-items: center; gap: 4px;">
+          <div id="timeline-map-legend" style="position: absolute; top: 12px; left: 12px; z-index: 1000; max-width: 290px; background: rgba(255, 255, 255, 0.96); border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 10px 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.18); font-family: serif; font-size: 11px; line-height: 1.4; color: #1e293b; pointer-events: auto;">
+            <div onclick="toggleLegendCollapse()" style="font-weight: bold; color: #b45309; margin-bottom: 6px; font-size: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;">
               <span>🧭 📌 연결선 의미 및 범례</span>
+              <span id="legend-toggle-btn" style="font-size: 10px; color: #64748b;">접기 ▲</span>
             </div>
-            <div style="margin-bottom: 4px; display: flex; align-items: flex-start; gap: 6px;">
-              <span style="display: inline-block; width: 16px; border-bottom: 2px dashed #dc2626; margin-top: 6px; flex-shrink: 0;"></span>
-              <div><strong style="color: #dc2626;">🔴 붉은 점선: 자생적 사슬망</strong><br/><span style="color: #64748b; font-size: 9.5px;">사경회↔전도부인↔성경반 3대 기제 연쇄 확장로</span></div>
-            </div>
-            <div style="margin-bottom: 4px; display: flex; align-items: flex-start; gap: 6px;">
-              <span style="display: inline-block; width: 16px; border-bottom: 2px dashed #d97706; margin-top: 6px; flex-shrink: 0;"></span>
-              <div><strong style="color: #d97706;">🟠 주황 점선: 부흥 전파로</strong><br/><span style="color: #64748b; font-size: 9.5px;">1907년 평양대부흥의 영적 불길 전국 확산선</span></div>
-            </div>
-            <div style="margin-bottom: 5px; display: flex; align-items: flex-start; gap: 6px;">
-              <span style="display: inline-block; width: 16px; height: 2px; background: #0284c7; margin-top: 6px; flex-shrink: 0;"></span>
-              <div><strong style="color: #0284c7;">🔵 푸른 실선: 선교 관문 유입로</strong><br/><span style="color: #64748b; font-size: 9.5px;">제물포·원산·정동을 통한 선교사/교재 최초 유입</span></div>
-            </div>
-            <div style="border-top: 1px solid #e2e8f0; padding-top: 4px; display: flex; justify-content: space-between; font-size: 9.5px; color: #64748b;">
-              <span>🟡 황금핀: 10대 핵심 거점</span>
-              <span>🔵 파랑핀: 주요 연계 거점</span>
+            <div id="legend-content-body" style="display: block;">
+              <div style="margin-bottom: 5px; display: flex; align-items: flex-start; gap: 8px;">
+                <span style="display: inline-block; width: 20px; border-bottom: 2.5px dashed #dc2626; margin-top: 7px; flex-shrink: 0;"></span>
+                <div><strong style="color: #dc2626;">🔴 붉은 점선: 자생적 사슬 연결망</strong><br/><span style="color: #64748b; font-size: 9.5px;">사경회 ↔ 전도부인 ↔ 성경반 3대 기제 연쇄 확장로 (논문 제Ⅳ장)</span></div>
+              </div>
+              <div style="margin-bottom: 5px; display: flex; align-items: flex-start; gap: 8px;">
+                <span style="display: inline-block; width: 20px; border-bottom: 2.5px dashed #d97706; margin-top: 7px; flex-shrink: 0;"></span>
+                <div><strong style="color: #d97706;">🟠 주황 점선: 부흥 전파로</strong><br/><span style="color: #64748b; font-size: 9.5px;">1907년 평양대부흥의 영적 불길이 선천·서울·개성 등으로 확산된 경로</span></div>
+              </div>
+              <div style="margin-bottom: 5px; display: flex; align-items: flex-start; gap: 8px;">
+                <span style="display: inline-block; width: 20px; height: 2.5px; background: #0284c7; margin-top: 7px; flex-shrink: 0;"></span>
+                <div><strong style="color: #0284c7;">🔵 푸른 실선: 선교 관문 유입로</strong><br/><span style="color: #64748b; font-size: 9.5px;">제물포·원산·정동을 통해 선교사 및 성경 교재가 유입된 최초 관문선</span></div>
+              </div>
+              <div style="margin-bottom: 6px; display: flex; align-items: flex-start; gap: 8px;">
+                <span style="display: inline-block; width: 20px; height: 2.5px; background: #7c3aed; margin-top: 7px; flex-shrink: 0;"></span>
+                <div><strong style="color: #7c3aed;">🟣 보라 실선: 내륙 순회 전도선</strong><br/><span style="color: #64748b; font-size: 9.5px;">청주·수원·호남 등 권서인과 지방 순회 사경회 연계선</span></div>
+              </div>
+              <div style="border-top: 1px solid #e2e8f0; padding-top: 5px; display: flex; justify-content: space-between; font-size: 10px; color: #475569;">
+                <span>🟡 황금핀: 10대 핵심 거점</span>
+                <span>🔵 파랑핀: 주요 연계 거점</span>
+              </div>
             </div>
           </div>
 
@@ -363,6 +370,9 @@
               </marker>
               <marker id="off-arrow-revival" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
                 <path d="M 0 1 L 9 5 L 0 9 z" fill="#d97706" />
+              </marker>
+              <marker id="off-arrow-circuit" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                <path d="M 0 1 L 9 5 L 0 9 z" fill="#7c3aed" />
               </marker>
             </defs>
 
@@ -1537,34 +1547,64 @@
     if (!linksGroup || !nodesGroup) return;
 
     const activeEra = erasData.find(e => e.id === currentEraId) || erasData[0];
-    const activeRegionIds = new Set(activeEra.activeRegions);
+    const activeRegionIds = new Set(activeEra.activeRegions || []);
 
-    // Draw Links
+    // 1. Draw Connecting Era Links (시공간 사슬망)
     linksGroup.innerHTML = '';
-    activeEra.activeLinks.forEach((link, idx) => {
-      const fromR = regionalChronologyData.find(r => r.id === link.from);
-      const toR = regionalChronologyData.find(r => r.id === link.to);
-      if (!fromR || !toR) return;
+    if (activeEra.activeLinks) {
+      activeEra.activeLinks.forEach((link, idx) => {
+        const fromR = regionalChronologyData.find(r => r.id === link.from);
+        const toR = regionalChronologyData.find(r => r.id === link.to);
+        if (!fromR || !toR) return;
 
-      const isChain = link.type === 'chain';
-      const isRevival = link.type === 'revival';
-      const strokeColor = isChain ? '#dc2626' : (isRevival ? '#d97706' : '#0284c7');
-      const markerId = isChain ? 'url(#off-arrow-chain)' : (isRevival ? 'url(#off-arrow-revival)' : 'url(#off-arrow-inflow)');
+        const isChain = link.type === 'chain';
+        const isRevival = link.type === 'revival';
+        const isInflow = link.type === 'inflow';
+        const isItineracy = link.type === 'itineracy';
 
-      const midX = (fromR.coords.x + toR.coords.x) / 2 + (idx % 2 === 0 ? 20 : -20);
-      const midY = (fromR.coords.y + toR.coords.y) / 2 + (idx % 2 === 0 ? -15 : 15);
+        const strokeColor = isChain ? '#dc2626' : (isRevival ? '#d97706' : (isInflow ? '#0284c7' : '#7c3aed'));
+        const markerId = isChain ? 'url(#off-arrow-chain)' : (isRevival ? 'url(#off-arrow-revival)' : (isInflow ? 'url(#off-arrow-inflow)' : 'url(#off-arrow-circuit)'));
 
-      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      path.setAttribute('d', 'M ' + fromR.coords.x + ' ' + fromR.coords.y + ' Q ' + midX + ' ' + midY + ' ' + toR.coords.x + ' ' + toR.coords.y);
-      path.setAttribute('fill', 'none');
-      path.setAttribute('stroke', strokeColor);
-      path.setAttribute('stroke-width', isChain ? '2.8' : '2');
-      if (isChain) path.setAttribute('stroke-dasharray', '6 4');
-      else if (isRevival) path.setAttribute('stroke-dasharray', '5 3');
-      path.setAttribute('stroke-opacity', '0.85');
-      path.setAttribute('marker-end', markerId);
-      linksGroup.appendChild(path);
-    });
+        const midX = (fromR.coords.x + toR.coords.x) / 2 + (idx % 2 === 0 ? 18 : -18);
+        const midY = (fromR.coords.y + toR.coords.y) / 2 + (idx % 2 === 0 ? -14 : 14);
+
+        // High-contrast understroke
+        const underPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        underPath.setAttribute('d', 'M ' + fromR.coords.x + ' ' + fromR.coords.y + ' Q ' + midX + ' ' + midY + ' ' + toR.coords.x + ' ' + toR.coords.y);
+        underPath.setAttribute('fill', 'none');
+        underPath.setAttribute('stroke', '#ffffff');
+        underPath.setAttribute('stroke-width', isChain ? '5' : '4');
+        underPath.setAttribute('stroke-opacity', '0.75');
+        linksGroup.appendChild(underPath);
+
+        // Main colored line with dash pattern and arrow head
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', 'M ' + fromR.coords.x + ' ' + fromR.coords.y + ' Q ' + midX + ' ' + midY + ' ' + toR.coords.x + ' ' + toR.coords.y);
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke', strokeColor);
+        path.setAttribute('stroke-width', isChain ? '3.2' : '2.4');
+        if (isChain) path.setAttribute('stroke-dasharray', '7 4');
+        else if (isRevival) path.setAttribute('stroke-dasharray', '5 3');
+        path.setAttribute('stroke-opacity', '0.95');
+        path.setAttribute('marker-end', markerId);
+        linksGroup.appendChild(path);
+
+        // Midpoint badge label on SVG
+        const typeBadge = isChain ? '사슬망' : (isRevival ? '부흥로' : (isInflow ? '유입로' : '순회선'));
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', midX);
+        text.setAttribute('y', midY);
+        text.setAttribute('text-anchor', 'middle');
+        text.setAttribute('fill', strokeColor);
+        text.setAttribute('stroke', '#ffffff');
+        text.setAttribute('stroke-width', '3px');
+        text.setAttribute('paint-order', 'stroke');
+        text.setAttribute('font-size', '9.5');
+        text.setAttribute('font-weight', 'bold');
+        text.textContent = typeBadge;
+        linksGroup.appendChild(text);
+      });
+    }
 
     // Draw Nodes
     nodesGroup.innerHTML = '';
@@ -1680,7 +1720,13 @@
       return;
     }
     if (leafletMap) {
-      setTimeout(function() { if (leafletMap) leafletMap.invalidateSize(); }, 60);
+      setTimeout(function() {
+        if (leafletMap) {
+          leafletMap.invalidateSize(true);
+          try { leafletMap.fitBounds([[33.1, 124.3], [43.0, 131.2]], { padding: [10, 10] }); } catch(err) {}
+          renderLeafletLayers();
+        }
+      }, 60);
       return;
     }
 
@@ -1697,6 +1743,8 @@
         scrollWheelZoom: false
       });
 
+      try { leafletMap.fitBounds([[33.1, 124.3], [43.0, 131.2]], { padding: [10, 10] }); } catch(err) {}
+
       leafletTileLayer = L.tileLayer(getTileUrl(currentTileType), {
         maxZoom: 19,
         attribution: '&copy; Google Maps / OpenStreetMap contributors'
@@ -1707,8 +1755,12 @@
 
       renderLeafletLayers();
       setTimeout(function() {
-        if (leafletMap) leafletMap.invalidateSize();
-      }, 120);
+        if (leafletMap) {
+          leafletMap.invalidateSize(true);
+          try { leafletMap.fitBounds([[33.1, 124.3], [43.0, 131.2]], { padding: [10, 10] }); } catch(err) {}
+          renderLeafletLayers();
+        }
+      }, 150);
     } catch (e) {
       console.error('Leaflet init error:', e);
       setTimelineMapMode('provinces');
@@ -1723,7 +1775,7 @@
     var activeEra = erasData.find(function(e) { return e.id === currentEraId; }) || erasData[0];
     var activeRegionIds = new Set(activeEra.activeRegions || []);
 
-    // 1. Draw Connecting Era Lines
+    // 1. Draw Connecting Era Lines with High-Contrast Background Stroke & Midpoint Label
     if (activeEra.activeLinks) {
       activeEra.activeLinks.forEach(function(link, idx) {
         var fromRegion = regionalChronologyData.find(function(r) { return r.id === link.from; });
@@ -1734,31 +1786,56 @@
         var isChain = link.type === 'chain';
         var isRevival = link.type === 'revival';
         var isInflow = link.type === 'inflow';
+        var isItineracy = link.type === 'itineracy';
+
         var color = isChain ? '#dc2626' : (isRevival ? '#d97706' : (isInflow ? '#0284c7' : '#7c3aed'));
-        var dashArray = isChain ? '7, 5' : (isRevival ? '6, 4' : undefined);
-        var weight = isChain ? 4 : 3;
+        var dashArray = isChain ? '8, 6' : (isRevival ? '6, 5' : undefined);
+        var weight = isChain ? 4 : (isRevival ? 3.5 : 3);
 
         var lat1 = fromRegion.latLng[0], lng1 = fromRegion.latLng[1];
         var lat2 = toRegion.latLng[0], lng2 = toRegion.latLng[1];
-        var midLat = (lat1 + lat2) / 2 + (idx % 2 === 0 ? 0.12 : -0.12);
-        var midLng = (lng1 + lng2) / 2 + (idx % 2 === 0 ? -0.15 : 0.15);
+        var midLat = (lat1 + lat2) / 2 + (idx % 2 === 0 ? 0.14 : -0.14);
+        var midLng = (lng1 + lng2) / 2 + (idx % 2 === 0 ? -0.16 : 0.16);
 
+        var typeBadge = isChain ? '🔴 사슬 환류망' : (isRevival ? '🟠 부흥 전파로' : (isInflow ? '🔵 선교 유입로' : '🟣 내륙 순회선'));
+
+        // Contrast white understroke for visibility on satellite and terrain tiles
+        var bgPolyline = L.polyline([[lat1, lng1], [midLat, midLng], [lat2, lng2]], {
+          color: '#ffffff',
+          weight: weight + 3,
+          opacity: 0.85,
+          lineCap: 'round',
+          lineJoin: 'round'
+        });
+        leafletLinesLayer.addLayer(bgPolyline);
+
+        // Main colored dashed/solid line
         var polyline = L.polyline([[lat1, lng1], [midLat, midLng], [lat2, lng2]], {
           color: color,
           weight: weight,
           dashArray: dashArray,
-          opacity: 0.9,
+          opacity: 0.95,
           lineCap: 'round',
           lineJoin: 'round'
         });
 
         polyline.bindTooltip(
-          '<div style="font-family:serif; font-size:12px; line-height:1.4;">' +
-          '<strong style="color:' + color + '; font-size:11px;">[' + (isChain ? '사슬 환류망' : (isRevival ? '부흥 전파로' : '선교 관문 유입로')) + ']</strong><br/>' +
-          '<span>' + link.label + '</span></div>',
+          '<div style="font-family:serif; font-size:12px; line-height:1.4; padding:2px 4px;">' +
+          '<strong style="color:' + color + '; font-size:11px;">[' + typeBadge + ']</strong><br/>' +
+          '<span style="color:#0f172a; font-weight:600;">' + link.label + '</span></div>',
           { sticky: true, opacity: 0.95 }
         );
         leafletLinesLayer.addLayer(polyline);
+
+        // Midpoint badge label on the map line
+        var midIcon = L.divIcon({
+          html: '<div style="background: rgba(255,255,255,0.96); border: 1.5px solid ' + color + '; color: ' + color + '; padding: 1px 6px; border-radius: 9999px; font-size: 10px; font-weight: 800; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.22); transform: translate(-50%, -50%); pointer-events: none; font-family: serif;">' + typeBadge + '</div>',
+          className: 'line-mid-badge',
+          iconSize: [84, 16],
+          iconAnchor: [42, 8]
+        });
+        var midMarker = L.marker([midLat, midLng], { icon: midIcon, interactive: false });
+        leafletLinesLayer.addLayer(midMarker);
       });
     }
 
@@ -1831,7 +1908,13 @@
       if (!leafletMap) {
         initLeafletTimelineMap();
       } else {
-        setTimeout(function() { if (leafletMap) leafletMap.invalidateSize(); }, 60);
+        setTimeout(function() {
+          if (leafletMap) {
+            leafletMap.invalidateSize(true);
+            try { leafletMap.fitBounds([[33.1, 124.3], [43.0, 131.2]], { padding: [10, 10] }); } catch(err) {}
+            renderLeafletLayers();
+          }
+        }, 60);
       }
     } else {
       if (leafletBox) leafletBox.style.display = 'none';
@@ -1880,7 +1963,24 @@
       }
     }
     if (leafletMap) {
-      setTimeout(function() { leafletMap.invalidateSize(); }, 150);
+      setTimeout(function() {
+        leafletMap.invalidateSize(true);
+        renderLeafletLayers();
+      }, 150);
+    }
+  }
+
+  function toggleLegendCollapse() {
+    var body = document.getElementById('legend-content-body');
+    var btn = document.getElementById('legend-toggle-btn');
+    if (body) {
+      if (body.style.display === 'none') {
+        body.style.display = 'block';
+        if (btn) btn.innerText = '접기 ▲';
+      } else {
+        body.style.display = 'none';
+        if (btn) btn.innerText = '펼치기 ▼';
+      }
     }
   }
 
@@ -1888,10 +1988,17 @@
     renderTimelineEraControls();
     renderTimelineRegionChips();
     renderRegionDetailPanel(currentRegionId);
-    if (currentMapMode === 'real') {
-      initLeafletTimelineMap();
-    } else {
-      renderTimelineSvgMap();
+    var tab = document.getElementById('tab-timelinemap');
+    if (tab && tab.classList.contains('active')) {
+      if (currentMapMode === 'real') {
+        if (!leafletMap) initLeafletTimelineMap();
+        else {
+          leafletMap.invalidateSize(true);
+          renderLeafletLayers();
+        }
+      } else {
+        renderTimelineSvgMap();
+      }
     }
   }
 
@@ -1906,9 +2013,21 @@
       setTimeout(initNetworkGraph, 50);
     } else if (tabName === 'timelinemap') {
       setTimeout(function() {
-        initTimelineMap();
-        if (leafletMap) leafletMap.invalidateSize();
-      }, 50);
+        renderTimelineEraControls();
+        renderTimelineRegionChips();
+        renderRegionDetailPanel(currentRegionId);
+        if (currentMapMode === 'real') {
+          if (!leafletMap) {
+            initLeafletTimelineMap();
+          } else {
+            leafletMap.invalidateSize(true);
+            try { leafletMap.fitBounds([[33.1, 124.3], [43.0, 131.2]], { padding: [10, 10] }); } catch(err) {}
+            renderLeafletLayers();
+          }
+        } else {
+          renderTimelineSvgMap();
+        }
+      }, 60);
     }
   }
 
@@ -1954,6 +2073,7 @@
   window.downloadCSV = downloadCSV;
   window.unlockAllPillars = unlockAllPillars;
   window.filterRelations = filterRelations;
+  window.toggleLegendCollapse = toggleLegendCollapse;
 
   function downloadCSV() {
     const BOM = '\uFEFF';
